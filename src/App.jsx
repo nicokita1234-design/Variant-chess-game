@@ -1897,8 +1897,8 @@ function evaluateBoard(state) {
   if (whiteBishops >= 2) score += 30;
   if (blackBishops >= 2) score -= 30;
 
-  const whiteMobility = allLegalMoves({ ...state, turn: "w" }, "w").length;
-  const blackMobility = allLegalMoves({ ...state, turn: "b" }, "b").length;
+    const whiteMobility = estimateMobilityForEval(state, "w");
+  const blackMobility = estimateMobilityForEval(state, "b");
   score += (whiteMobility - blackMobility) * 4;
 
   if (isInCheck(state.board, "b", activeVariant, state)) score += activeVariant === "roman" ? 140 : 30;
@@ -1918,13 +1918,20 @@ function evaluateBoard(state) {
     score += getRomanKingSafetyScore(state.board, "b");
   }
 
-  if (activeVariant === "persian") {
-    for (const piece of state.reserve?.w || []) score += PIECE_VALUES[getType(piece)] * 0.35;
-    for (const piece of state.reserve?.b || []) score -= PIECE_VALUES[getType(piece)] * 0.35;
+    if (activeVariant === "persian") {
+    const reserveFactor = getPersianReserveValueFactor(state);
+
+    for (const piece of state.reserve?.w || []) {
+      score += PIECE_VALUES[getType(piece)] * reserveFactor;
+    }
+    for (const piece of state.reserve?.b || []) {
+      score -= PIECE_VALUES[getType(piece)] * reserveFactor;
+    }
   }
 
-    const whiteSkipPenalty = (state.skipNext?.w || 0) * 260;
-  const blackSkipPenalty = (state.skipNext?.b || 0) * 260;
+  const skipPenaltyBase = activeVariant === "persian" ? getPersianSkipPenalty(state) : 260;
+  const whiteSkipPenalty = (state.skipNext?.w || 0) * skipPenaltyBase;
+  const blackSkipPenalty = (state.skipNext?.b || 0) * skipPenaltyBase;
   score -= whiteSkipPenalty;
   score += blackSkipPenalty;
 
@@ -1969,6 +1976,154 @@ function totalNonPawnMaterial(state) {
   return total;
 }
 
+function getGamePhase(state) {
+  const ply = state.moveHistory?.length || 0;
+  const nonPawnMaterial = totalNonPawnMaterial(state);
+
+  if (isEndgame(state) || nonPawnMaterial <= 2200) return "endgame";
+  if (ply < 10) return "opening";
+  if (ply < 34) return "middlegame";
+  return "late";
+}
+
+function isPersianSide(state, color = state.turn) {
+  return variantForColor(state, color) === "persian";
+}
+
+function getPersianReserveValueFactor(state) {
+  const phase = getGamePhase(state);
+  if (phase === "opening") return 0.46;
+  if (phase === "middlegame") return 0.14;
+  if (phase === "late") return 0.22;
+  return 0.30;
+}
+
+function getPersianSkipPenalty(state) {
+  const phase = getGamePhase(state);
+  if (phase === "opening") return 110;
+  if (phase === "middlegame") return 430;
+  if (phase === "late") return 240;
+  return 180;
+}
+
+function scorePersianResurrectionMove(state, move) {
+  if (!move?.resurrect) return -999999;
+
+  const type = getType(move.piece);
+  const phase = getGamePhase(state);
+  const inCheckNow = isInCheck(state.board, state.turn, state.variant || "normal", state);
+  const file = move.to[1];
+
+  let score = (PIECE_VALUES[type] || 0) * 0.45;
+
+  // Opening: fairly happy to rebuild minor pieces early.
+  if (phase === "opening") {
+    if (type === "n" || type === "b") score += 180;
+    if (type === "r") score += 70;
+    if (type === "q") score -= 150;
+    if (type === "p") score -= 40;
+    if (file >= 2 && file <= 5) score += 24;
+  }
+
+  // Middlegame: strongly discourage resurrection unless urgent.
+  if (phase === "middlegame") {
+    score -= 320;
+    if (type === "q") score -= 220;
+    if (type === "r") score -= 160;
+    if (type === "n" || type === "b") score -= 90;
+    if (type === "p") score -= 50;
+  }
+
+  // Endgame / late: useful again, but not spammed.
+  if (phase === "late" || phase === "endgame") {
+    if (type === "q") score += 120;
+    if (type === "r") score += 90;
+    if (type === "n" || type === "b") score += 45;
+  }
+
+  const result = applyMoveToState(state, move, "q");
+  const nextState = buildChildState(state, result);
+
+  if (inCheckNow && !isInCheck(nextState.board, state.turn, nextState.variant || "normal", nextState)) {
+    score += 700;
+  }
+
+  if (moveGivesCheck(state, move)) {
+    score += 180;
+  }
+
+  const opponentMoves = allLegalMoves(nextState, nextState.turn);
+  if (opponentMoves.length <= 4) {
+    score += 120;
+  }
+
+  return score;
+}
+
+function filterSearchMovesForAi(state, moves) {
+  if (!isPersianSide(state, state.turn)) return moves;
+
+  const phase = getGamePhase(state);
+  const inCheckNow = isInCheck(state.board, state.turn, state.variant || "normal", state);
+
+  const normalMoves = moves.filter((m) => !m.resurrect);
+  const resurrectionMoves = moves
+    .filter((m) => m.resurrect)
+    .map((move) => ({ move, score: scorePersianResurrectionMove(state, move) }))
+    .sort((a, b) => b.score - a.score);
+
+  if (resurrectionMoves.length === 0) return moves;
+
+  // Emergency: allow a few resurrection options.
+  if (inCheckNow || moves.length <= 6) {
+    return [
+      ...normalMoves,
+      ...resurrectionMoves.slice(0, 3).map((x) => x.move),
+    ];
+  }
+
+  // Opening: allow the best 1-2 resurrections.
+  if (phase === "opening") {
+    const keep = resurrectionMoves.filter((x) => x.score >= 140).slice(0, 2).map((x) => x.move);
+    return [...normalMoves, ...keep];
+  }
+
+  // Middlegame: almost never search resurrection lines unless nothing else exists.
+  if (phase === "middlegame") {
+    if (normalMoves.length > 0) return normalMoves;
+    return resurrectionMoves.slice(0, 1).map((x) => x.move);
+  }
+
+  // Late / endgame: keep only best couple.
+  return [
+    ...normalMoves,
+    ...resurrectionMoves.slice(0, 2).map((x) => x.move),
+  ];
+}
+
+function estimateMobilityForEval(state, color) {
+  // Persian mobility is expensive if we count every resurrection in eval.
+  // Use a cheaper approximation there.
+  if (variantForColor(state, color) === "persian") {
+    const tempState = color === state.turn ? state : { ...state, turn: color };
+    let count = 0;
+
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const piece = tempState.board[r][c];
+        if (!piece || getColor(piece) !== color) continue;
+        count += generatePseudoMoves(tempState, r, c).length;
+      }
+    }
+
+    const reserveCount = (tempState.reserve?.[color] || []).length;
+    count += Math.min(2, reserveCount); // tiny bonus, not full branching cost
+    return count;
+  }
+
+  return allLegalMoves({ ...state, turn: color }, color).length;
+}
+
 function estimatePositionComplexity(state, moves) {
   const moveCount = moves.length;
   const nonPawnMaterial = totalNonPawnMaterial(state);
@@ -1993,7 +2148,7 @@ function estimatePositionComplexity(state, moves) {
 }
 
 function getMoveOrderingScore(state, move) {
-  if (move.resurrect) return -120;
+   if (move.resurrect) return scorePersianResurrectionMove(state, move);
   if (move.sacrifice) return -100;
 
   let score = 0;
@@ -2138,7 +2293,9 @@ function minimax(state, depth, alpha, beta, maximizingPlayer, tt = GLOBAL_TT) {
     return terminalValue;
   }
 
-  const orderedMoves = orderMoves(state, legal);
+    const searchMoves = filterSearchMovesForAi(state, legal);
+  const orderedMoves = orderMoves(state, searchMoves);
+
   let bestValue;
 
   if (maximizingPlayer) {
@@ -2336,6 +2493,8 @@ function getStrongAiSearchConfig(state, moves) {
   const complexity = estimatePositionComplexity(state, moves);
   const endgameish = totalNonPawnMaterial(state) <= 2200;
   const currentlyInCheck = isInCheck(state.board, state.turn, state.variant || "normal", state);
+  const phase = getGamePhase(state);
+  const persianTurn = isPersianSide(state, state.turn);
 
   let depth;
   let rootLimit;
@@ -2356,6 +2515,26 @@ function getStrongAiSearchConfig(state, moves) {
 
   if (currentlyInCheck) depth += 1;
 
+  // Persian is uniquely branchy because of resurrection.
+  // Tighten search a bit so it stays responsive.
+  if (persianTurn) {
+    if (phase === "opening") {
+      depth = Math.min(depth, 4);
+      rootLimit = Math.min(rootLimit, 8);
+    } else if (phase === "middlegame") {
+      depth = Math.min(depth, 3);
+      rootLimit = Math.min(rootLimit, 6);
+    } else {
+      depth = Math.min(depth, 4);
+      rootLimit = Math.min(rootLimit, 8);
+    }
+
+    if (currentlyInCheck) {
+      depth = Math.min(depth + 1, 5);
+      rootLimit = Math.min(rootLimit + 1, 9);
+    }
+  }
+
   return { depth, rootLimit };
 }
 
@@ -2365,7 +2544,8 @@ async function chooseStrongComputerMoveAsync(state, isCancelled = () => false) {
   if (legalMoves.length === 1) return legalMoves[0];
 
   const aiColor = state.turn;
-  let orderedMoves = orderMoves(state, legalMoves);
+    let orderedMoves = orderMoves(state, filterSearchMovesForAi(state, legalMoves));
+
 
     if (isNormalLikeGame(state)) {
     const currentKeys = state.moveKeys || [];
