@@ -1718,6 +1718,108 @@ function getUnsafeCapturePenalty(state, move) {
   return 0;
 }
 
+function getRepetitionPenalty(state, move) {
+  if (!state?.moveKeys || state.moveKeys.length < 6) return 0;
+
+  const result = applyMoveToState(state, move, "q");
+  const nextState = buildChildState(state, result);
+  const nextHash = hashState(nextState);
+
+  let repeats = 0;
+
+  const historyStates = [];
+  let replayState = createInitialState(state.variant || "normal", state.whiteArmy || "normal", state.blackArmy || "normal");
+  historyStates.push(hashState(replayState));
+
+  for (let i = 0; i < state.moveKeys.length; i++) {
+    const key = state.moveKeys[i];
+    const legal = allLegalMoves(replayState);
+    const matchedMove = legal.find((m) => moveToKey(m) === key);
+    if (!matchedMove) break;
+
+    const replayResult = applyMoveToState(replayState, matchedMove, "q");
+    replayState = buildChildState(replayState, replayResult);
+    historyStates.push(hashState(replayState));
+  }
+
+  for (const pastHash of historyStates) {
+    if (pastHash === nextHash) repeats += 1;
+  }
+
+  if (repeats >= 2) return 500;
+  if (repeats >= 1) return 140;
+
+  return 0;
+}
+
+function countAttackersOnSquare(state, row, col, attackerColor) {
+  let count = 0;
+
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const piece = state.board[r][c];
+      if (!piece || getColor(piece) !== attackerColor) continue;
+
+      const pseudoMoves = generatePseudoMoves(state, r, c);
+      for (const move of pseudoMoves) {
+        if (move.to[0] === row && move.to[1] === col) {
+          count += 1;
+          break;
+        }
+      }
+    }
+  }
+
+  return count;
+}
+
+function getUnsafePlacementPenalty(state, move) {
+  if (!move?.from || move.resurrect || move.sacrifice) return 0;
+
+  const movingPiece = state.board[move.from[0]][move.from[1]];
+  if (!movingPiece) return 0;
+
+  const movingType = getType(movingPiece);
+  const movingColor = getColor(movingPiece);
+  const opponentColor = other(movingColor);
+
+  if (movingType === "k") return 0;
+
+  const result = applyMoveToState(state, move, "q");
+  const nextState = buildChildState(state, result);
+
+  const attackers = countAttackersOnSquare(nextState, move.to[0], move.to[1], opponentColor);
+  if (attackers === 0) return 0;
+
+  const defenders = countAttackersOnSquare(nextState, move.to[0], move.to[1], movingColor);
+  const pieceValue = PIECE_VALUES[movingType] || 0;
+
+  let penalty = 0;
+
+  if (attackers > defenders) {
+    if (movingType === "q") penalty += 260;
+    else if (movingType === "r") penalty += 140;
+    else if (movingType === "b" || movingType === "n") penalty += 90;
+    else if (movingType === "p") penalty += 25;
+  }
+
+  if (attackers >= 1 && defenders === 0) {
+    if (movingType === "q") penalty += 220;
+    else if (movingType === "r") penalty += 120;
+    else if (movingType === "b" || movingType === "n") penalty += 70;
+    else if (movingType === "p") penalty += 20;
+  }
+
+  const target = state.board[move.to[0]][move.to[1]];
+  const isCapture = !!target || !!move.enPassant;
+
+  if (!isCapture && pieceValue >= 500 && attackers > 0) {
+    penalty += 80;
+  }
+
+  return penalty;
+}
+
 function evaluateBoard(state) {
   const cacheKey = `eval|${hashState(state)}`;
   if (EVAL_CACHE.has(cacheKey)) return EVAL_CACHE.get(cacheKey);
@@ -2319,7 +2421,7 @@ async function chooseStrongComputerMoveAsync(state, isCancelled = () => false) {
         tt
       );
 
-             const immediateLossPenalty = getImmediateLossPenalty(state, move);
+                  const immediateLossPenalty = getImmediateLossPenalty(state, move);
       if (immediateLossPenalty > 0) {
         score += aiColor === "w" ? -immediateLossPenalty : immediateLossPenalty;
       }
@@ -2327,6 +2429,16 @@ async function chooseStrongComputerMoveAsync(state, isCancelled = () => false) {
       const unsafeCapturePenalty = getUnsafeCapturePenalty(state, move);
       if (unsafeCapturePenalty > 0) {
         score += aiColor === "w" ? -unsafeCapturePenalty : unsafeCapturePenalty;
+      }
+
+      const unsafePlacementPenalty = getUnsafePlacementPenalty(state, move);
+      if (unsafePlacementPenalty > 0) {
+        score += aiColor === "w" ? -unsafePlacementPenalty : unsafePlacementPenalty;
+      }
+
+      const repetitionPenalty = getRepetitionPenalty(state, move);
+      if (repetitionPenalty > 0) {
+        score += aiColor === "w" ? -repetitionPenalty : repetitionPenalty;
       }
 
       const samuraiSwing = samuraiCatastrophePenalty(state, move);
