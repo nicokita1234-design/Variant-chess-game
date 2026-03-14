@@ -286,6 +286,131 @@ function samuraiCatastrophePenalty(state, move) {
   let penalty = 0;
   let bonus = 0;
 
+function getPieceOnSquare(board, square) {
+  if (!square) return null;
+  return board[square[0]][square[1]];
+}
+
+function moveIsSameTypeCapture(state, move) {
+  if (!move?.from || move.resurrect || move.sacrifice) return false;
+
+  const attacker = state.board[move.from[0]][move.from[1]];
+  const target = state.board[move.to[0]][move.to[1]];
+  if (!attacker || !target) return false;
+  if (getColor(attacker) === getColor(target)) return false;
+
+  return getType(attacker) === getType(target) && getType(attacker) !== "p";
+}
+
+function countSameTypeCaptureThreats(state, color) {
+  let count = 0;
+  const temp = color === state.turn ? state : { ...state, turn: color };
+  const moves = allLegalMoves(temp, color);
+
+  for (const move of moves) {
+    if (moveIsSameTypeCapture(temp, move)) count += 1;
+    else if (isSamuraiCatastropheCapture(temp, move)) count += 1;
+  }
+
+  return count;
+}
+
+function countCheckingMoves(state, color) {
+  const temp = color === state.turn ? state : { ...state, turn: color };
+  const moves = allLegalMoves(temp, color);
+  let count = 0;
+
+  for (const move of moves) {
+    if (moveGivesCheck(temp, move)) count += 1;
+  }
+
+  return count;
+}
+
+function getBestCaptureValueAvailable(state, color) {
+  const temp = color === state.turn ? state : { ...state, turn: color };
+  const moves = allLegalMoves(temp, color);
+  let best = 0;
+
+  for (const move of moves) {
+    if (!move.from || move.sacrifice || move.resurrect) continue;
+    const target = temp.board[move.to[0]][move.to[1]];
+    if (!target && !move.enPassant) continue;
+
+    const victimValue = target ? (PIECE_VALUES[getType(target)] || 0) : 100;
+    if (victimValue > best) best = victimValue;
+  }
+
+  return best;
+}
+
+function getSamuraiSacrificeScore(state, move) {
+  if (!move?.sacrifice || !move.from) return -999999;
+
+  const piece = state.board[move.from[0]][move.from[1]];
+  if (!piece) return -999999;
+
+  const color = getColor(piece);
+  const enemy = other(color);
+  const type = getType(piece);
+
+  if (type === "k") return -999999;
+
+  const pieceValue = PIECE_VALUES[type] || 0;
+
+  const beforeSameTypeThreats = countSameTypeCaptureThreats(state, color);
+  const beforeEnemySameTypeThreats = countSameTypeCaptureThreats(state, enemy);
+  const beforeChecks = countCheckingMoves(state, color);
+  const beforeEnemyChecks = countCheckingMoves(state, enemy);
+  const beforeBestCapture = getBestCaptureValueAvailable(state, color);
+
+  const result = applyMoveToState(state, move, "q");
+  const nextState = buildChildState(state, result);
+
+  const afterSameTypeThreats = countSameTypeCaptureThreats(nextState, color);
+  const afterEnemySameTypeThreats = countSameTypeCaptureThreats(nextState, enemy);
+  const afterChecks = countCheckingMoves(nextState, color);
+  const afterEnemyChecks = countCheckingMoves(nextState, enemy);
+  const afterBestCapture = getBestCaptureValueAvailable(nextState, color);
+
+  let score = -pieceValue;
+
+  // Opening a catastrophic same-type capture is huge in Samurai.
+  score += (afterSameTypeThreats - beforeSameTypeThreats) * 950;
+
+  // Removing enemy catastrophic threats is also huge.
+  score += (beforeEnemySameTypeThreats - afterEnemySameTypeThreats) * 850;
+
+  // Sacrifice-discovered checks matter a lot.
+  score += (afterChecks - beforeChecks) * 260;
+
+  // If sacrifice reduces enemy checking resources, reward it.
+  score += (beforeEnemyChecks - afterEnemyChecks) * 180;
+
+  // If sacrifice opens stronger captures, reward that too.
+  score += Math.max(0, afterBestCapture - beforeBestCapture) * 0.65;
+
+  // If after sacrificing, the side is no longer in check, reward heavily.
+  const wasInCheck = isInCheck(state.board, color, state.variant || "normal", state);
+  const nowInCheck = isInCheck(nextState.board, color, nextState.variant || "normal", nextState);
+
+  if (wasInCheck && !nowInCheck) score += 1400;
+
+  // If sacrifice gives immediate check, strong bonus.
+  const nextMoves = allLegalMoves(nextState, color);
+  const canCheckImmediately = nextMoves.some((m) => moveGivesCheck(nextState, m));
+  if (canCheckImmediately) score += 220;
+
+  // If sacrifice creates an immediate winning move next, very big bonus.
+  const createsMateThreat = nextMoves.some((m) => isImmediateWinningMove(nextState, m));
+  if (createsMateThreat) score += 4000;
+
+  // If enemy has immediate win after this, punish hard.
+  if (moveAllowsOpponentImmediateWin(state, move)) score -= 900000;
+
+  return score;
+}
+
   if (isSamuraiCatastropheCapture(state, move)) {
     const movingPiece = move.from ? state.board[move.from[0]][move.from[1]] : null;
     const movingType = movingPiece ? getType(movingPiece) : null;
@@ -2149,7 +2274,8 @@ function estimatePositionComplexity(state, moves) {
 
 function getMoveOrderingScore(state, move) {
    if (move.resurrect) return scorePersianResurrectionMove(state, move);
-  if (move.sacrifice) return -100;
+    if (move.sacrifice) return getSamuraiSacrificeScore(state, move);
+
 
   let score = 0;
 
@@ -2293,10 +2419,34 @@ function minimax(state, depth, alpha, beta, maximizingPlayer, tt = GLOBAL_TT) {
     return terminalValue;
   }
 
-    const searchMoves = filterSearchMovesForAi(state, legal);
+    const searchMoves = filterSamuraiSearchMoves(state, filterSearchMovesForAi(state, legal));
   const orderedMoves = orderMoves(state, searchMoves);
 
   let bestValue;
+
+function filterSamuraiSearchMoves(state, moves) {
+  if (variantForColor(state, state.turn) !== "samurai") return moves;
+
+  const normalMoves = [];
+  const sacrifices = [];
+
+  for (const move of moves) {
+    if (move.sacrifice) {
+      sacrifices.push({ move, score: getSamuraiSacrificeScore(state, move) });
+    } else {
+      normalMoves.push(move);
+    }
+  }
+
+  sacrifices.sort((a, b) => b.score - a.score);
+
+  const strongSacrifices = sacrifices
+    .filter((x) => x.score > -120)
+    .slice(0, 3)
+    .map((x) => x.move);
+
+  return [...normalMoves, ...strongSacrifices];
+}
 
   if (maximizingPlayer) {
     bestValue = -Infinity;
@@ -2495,6 +2645,10 @@ function getStrongAiSearchConfig(state, moves) {
   const currentlyInCheck = isInCheck(state.board, state.turn, state.variant || "normal", state);
   const phase = getGamePhase(state);
   const persianTurn = isPersianSide(state, state.turn);
+  const samuraiTurn = variantForColor(state, state.turn) === "samurai";
+  if (samuraiTurn) {
+    rootLimit = Math.min(Math.max(rootLimit, 10), 14);
+  }
 
   let depth;
   let rootLimit;
@@ -2544,8 +2698,10 @@ async function chooseStrongComputerMoveAsync(state, isCancelled = () => false) {
   if (legalMoves.length === 1) return legalMoves[0];
 
   const aiColor = state.turn;
-    let orderedMoves = orderMoves(state, filterSearchMovesForAi(state, legalMoves));
-
+     let orderedMoves = orderMoves(
+    state,
+    filterSamuraiSearchMoves(state, filterSearchMovesForAi(state, legalMoves))
+  );
 
     if (isNormalLikeGame(state)) {
     const currentKeys = state.moveKeys || [];
@@ -2627,6 +2783,11 @@ async function chooseStrongComputerMoveAsync(state, isCancelled = () => false) {
       }
       if (samuraiSwing.bonus > 0) {
         score += aiColor === "w" ? samuraiSwing.bonus : -samuraiSwing.bonus;
+      }
+
+            if (move.sacrifice) {
+        const sacrificeScore = getSamuraiSacrificeScore(state, move);
+        score += aiColor === "w" ? sacrificeScore : -sacrificeScore;
       }
 
       if (moveGivesCheck(state, move)) {
