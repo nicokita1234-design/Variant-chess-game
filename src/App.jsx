@@ -2,12 +2,12 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const PIECES = {
-  wp: "♟",
-  wr: "♜",
-  wn: "♞",
-  wb: "♝",
-  wq: "♛",
-  wk: "♚",
+  wp: "♙",
+  wr: "♖",
+  wn: "♘",
+  wb: "♗",
+  wq: "♕",
+  wk: "♔",
   bp: "♟",
   br: "♜",
   bn: "♞",
@@ -354,6 +354,12 @@ function pieceClass(piece) {
   return getColor(piece) === "w"
     ? "!text-white [text-shadow:0_0_1px_#111,0_1px_0_#111,1px_0_0_#111,-1px_0_0_#111,0_-1px_0_#111]"
     : "!text-neutral-900";
+}
+
+function pieceFontStyle() {
+  return {
+    fontFamily: '"Segoe UI Symbol", "Noto Sans Symbols 2", "Noto Sans Symbols", "DejaVu Sans", serif',
+  };
 }
 
 function variantLabel(name) {
@@ -2969,7 +2975,12 @@ export default function PlayableChessGame() {
                             <span className="absolute inset-0 pointer-events-none border-2 border-red-400/80 animate-ping" />
                           </>
                         )}
-                        <span className={`relative z-10 transition-transform duration-200 ${isLastMoveToSquare(r, c) ? "scale-110" : "scale-100"} ${pieceClass(piece)}`}>{piece ? PIECES[piece] : ""}</span>
+                        <span
+  className={`relative z-10 transition-transform duration-200 ${isLastMoveToSquare(r, c) ? "scale-110" : "scale-100"} ${pieceClass(piece)}`}
+  style={pieceFontStyle()}
+>
+  {piece ? PIECES[piece] : ""}
+</span>
                       </button>
                     );
                   })}
