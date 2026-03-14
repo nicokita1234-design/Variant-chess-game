@@ -20,6 +20,7 @@ const AI_NAME = "Strong AI";
 const ANALYSIS_ROOT_MOVES = 3;
 const QUIESCENCE_DEPTH = 2;
 const AI_MOVE_DELAY_MS = 20;
+const MATE_SCORE = 1000000;
 
 const STRONG_AI_BASE_DEPTH = 4;
 const STRONG_AI_ENDGAME_DEPTH = 5;
@@ -1663,6 +1664,60 @@ function evaluateCenterControl(board) {
   return score;
 }
 
+function getSmallestAttackerValue(state, row, col, attackerColor) {
+  let best = Infinity;
+
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const piece = state.board[r][c];
+      if (!piece || getColor(piece) !== attackerColor) continue;
+
+      const pseudoMoves = generatePseudoMoves(state, r, c);
+      for (const move of pseudoMoves) {
+        if (move.to[0] === row && move.to[1] === col) {
+          const value = PIECE_VALUES[getType(piece)] || 9999;
+          if (value < best) best = value;
+          break;
+        }
+      }
+    }
+  }
+
+  return best === Infinity ? null : best;
+}
+
+function getUnsafeCapturePenalty(state, move) {
+  if (!move?.from || move.resurrect || move.sacrifice) return 0;
+
+  const movingPiece = state.board[move.from[0]][move.from[1]];
+  if (!movingPiece) return 0;
+
+  const target = state.board[move.to[0]][move.to[1]];
+  const isCapture = !!target || !!move.enPassant;
+  if (!isCapture) return 0;
+
+  const moverColor = getColor(movingPiece);
+  const opponentColor = other(moverColor);
+  const attackerValue = PIECE_VALUES[getType(movingPiece)] || 0;
+  const victimValue = target ? (PIECE_VALUES[getType(target)] || 0) : 100;
+
+  const result = applyMoveToState(state, move, "q");
+  const nextState = buildChildState(state, result);
+
+  const smallestRecaptor = getSmallestAttackerValue(nextState, move.to[0], move.to[1], opponentColor);
+  if (smallestRecaptor === null) return 0;
+
+  const netLoss = attackerValue - victimValue;
+
+  if (netLoss <= 0) return 0;
+
+  if (smallestRecaptor <= attackerValue) {
+    return netLoss + 80;
+  }
+
+  return 0;
+}
+
 function evaluateBoard(state) {
   const cacheKey = `eval|${hashState(state)}`;
   if (EVAL_CACHE.has(cacheKey)) return EVAL_CACHE.get(cacheKey);
@@ -1891,7 +1946,7 @@ function getMoveOrderingScore(state, move) {
   score += Math.round((7 - distFromCenter) * 6);
 
   if (moveGivesCheck(state, move)) {
-    score += 220;
+    score += 60;
   }
 
   return score;
@@ -1914,14 +1969,10 @@ function quiescence(state, alpha, beta, maximizingPlayer, depthLeft = QUIESCENCE
 
   if (depthLeft <= 0) return standPat;
 
-    const tacticalMoves = orderMoves(state, allLegalMoves(state, state.turn)).filter((move) => {
+      const tacticalMoves = orderMoves(state, allLegalMoves(state, state.turn)).filter((move) => {
     if (move.resurrect || move.sacrifice) return false;
-
     const target = state.board[move.to[0]][move.to[1]];
-    const isCapture = !!target || !!move.enPassant;
-    const isCheck = moveGivesCheck(state, move);
-
-    return isCapture || isCheck;
+    return !!target || !!move.enPassant;
   });
 
   if (tacticalMoves.length === 0) return standPat;
@@ -1965,13 +2016,19 @@ function minimax(state, depth, alpha, beta, maximizingPlayer, tt = GLOBAL_TT) {
   const legal = allLegalMoves(state, state.turn);
   const inCheck = isInCheck(state.board, state.turn, state.variant || "normal", state);
 
-  if (depth === 0 || legal.length === 0) {
+    if (depth === 0 || legal.length === 0) {
     let terminalValue;
+
     if (legal.length === 0) {
-      terminalValue = inCheck ? (maximizingPlayer ? -999999 - depth : 999999 + depth) : 0;
+      if (inCheck) {
+        terminalValue = maximizingPlayer ? -MATE_SCORE - depth : MATE_SCORE + depth;
+      } else {
+        terminalValue = 0;
+      }
     } else {
       terminalValue = quiescence(state, alpha, beta, maximizingPlayer);
     }
+
     if (tt && key) {
       trimMap(tt, TT_MAX_SIZE);
       tt.set(key, { value: terminalValue, flag: "exact" });
@@ -2208,7 +2265,7 @@ async function chooseStrongComputerMoveAsync(state, isCancelled = () => false) {
   const aiColor = state.turn;
   let orderedMoves = orderMoves(state, legalMoves);
 
-  if (isNormalLikeGame(state)) {
+    if (isNormalLikeGame(state)) {
     const currentKeys = state.moveKeys || [];
     const matchingLines = OPENING_BOOK.filter((opening) => {
       if (opening.moves.length <= currentKeys.length) return false;
@@ -2220,8 +2277,12 @@ async function chooseStrongComputerMoveAsync(state, isCancelled = () => false) {
 
     if (matchingLines.length > 0 && currentKeys.length < 8) {
       const nextBookKeys = [...new Set(matchingLines.map((line) => line.moves[currentKeys.length]))];
-      const matchingMove = orderedMoves.find((m) => nextBookKeys.includes(moveToKey(m)));
-      if (matchingMove) return matchingMove;
+      const matchingBookMoves = orderedMoves.filter((m) => nextBookKeys.includes(moveToKey(m)));
+
+      if (matchingBookMoves.length > 0) {
+        const topBookMoves = matchingBookMoves.slice(0, Math.min(3, matchingBookMoves.length));
+        return topBookMoves[Math.floor(Math.random() * topBookMoves.length)];
+      }
     }
   }
 
@@ -2258,9 +2319,14 @@ async function chooseStrongComputerMoveAsync(state, isCancelled = () => false) {
         tt
       );
 
-            const immediateLossPenalty = getImmediateLossPenalty(state, move);
+             const immediateLossPenalty = getImmediateLossPenalty(state, move);
       if (immediateLossPenalty > 0) {
         score += aiColor === "w" ? -immediateLossPenalty : immediateLossPenalty;
+      }
+
+      const unsafeCapturePenalty = getUnsafeCapturePenalty(state, move);
+      if (unsafeCapturePenalty > 0) {
+        score += aiColor === "w" ? -unsafeCapturePenalty : unsafeCapturePenalty;
       }
 
       const samuraiSwing = samuraiCatastrophePenalty(state, move);
