@@ -2442,7 +2442,7 @@ function filterSamuraiSearchMoves(state, moves) {
 
   const strongSacrifices = sacrifices
     .filter((x) => x.score > -120)
-    .slice(0, 3)
+    .slice(0, 2)
     .map((x) => x.move);
 
   return [...normalMoves, ...strongSacrifices];
@@ -2646,9 +2646,6 @@ function getStrongAiSearchConfig(state, moves) {
   const phase = getGamePhase(state);
   const persianTurn = isPersianSide(state, state.turn);
   const samuraiTurn = variantForColor(state, state.turn) === "samurai";
-  if (samuraiTurn) {
-    rootLimit = Math.min(Math.max(rootLimit, 10), 14);
-  }
 
   let depth;
   let rootLimit;
@@ -2666,6 +2663,33 @@ function getStrongAiSearchConfig(state, moves) {
     depth = STRONG_AI_BASE_DEPTH;
     rootLimit = STRONG_AI_MAX_ROOT;
   }
+
+  if (currentlyInCheck) depth += 1;
+
+  if (samuraiTurn) {
+    rootLimit = Math.min(Math.max(rootLimit, 10), 14);
+  }
+
+  if (persianTurn) {
+    if (phase === "opening") {
+      depth = Math.min(depth, 4);
+      rootLimit = Math.min(rootLimit, 8);
+    } else if (phase === "middlegame") {
+      depth = Math.min(depth, 3);
+      rootLimit = Math.min(rootLimit, 6);
+    } else {
+      depth = Math.min(depth, 4);
+      rootLimit = Math.min(rootLimit, 8);
+    }
+
+    if (currentlyInCheck) {
+      depth = Math.min(depth + 1, 5);
+      rootLimit = Math.min(rootLimit + 1, 9);
+    }
+  }
+
+  return { depth, rootLimit };
+}
 
   if (currentlyInCheck) depth += 1;
 
@@ -2687,7 +2711,6 @@ function getStrongAiSearchConfig(state, moves) {
       depth = Math.min(depth + 1, 5);
       rootLimit = Math.min(rootLimit + 1, 9);
     }
-  }
 
   return { depth, rootLimit };
 }
