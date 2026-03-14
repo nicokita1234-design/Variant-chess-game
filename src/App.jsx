@@ -1364,6 +1364,305 @@ function getPieceSquareValue(piece, r, c, endgame = false) {
   return getColor(piece) === "w" ? table[r][c] : table[7 - r][c];
 }
 
+function fileHasPawn(board, file, color) {
+  for (let r = 0; r < 8; r++) {
+    if (board[r][file] === `${color}p`) return true;
+  }
+  return false;
+}
+
+function countPawnsOnFile(board, file, color) {
+  let count = 0;
+  for (let r = 0; r < 8; r++) {
+    if (board[r][file] === `${color}p`) count += 1;
+  }
+  return count;
+}
+
+function isPassedPawn(board, row, col, color) {
+  const enemy = other(color);
+  const dir = color === "w" ? -1 : 1;
+
+  for (let fc = Math.max(0, col - 1); fc <= Math.min(7, col + 1); fc++) {
+    let r = row + dir;
+    while (inBounds(r, fc)) {
+      if (board[r][fc] === `${enemy}p`) return false;
+      r += dir;
+    }
+  }
+  return true;
+}
+
+function isIsolatedPawn(board, row, col, color) {
+  for (const adjFile of [col - 1, col + 1]) {
+    if (adjFile < 0 || adjFile > 7) continue;
+    for (let r = 0; r < 8; r++) {
+      if (board[r][adjFile] === `${color}p`) return false;
+    }
+  }
+  return true;
+}
+
+function isConnectedPawn(board, row, col, color) {
+  const supportRows = color === "w" ? [row, row + 1] : [row, row - 1];
+
+  for (const adjFile of [col - 1, col + 1]) {
+    if (adjFile < 0 || adjFile > 7) continue;
+    for (const rr of supportRows) {
+      if (inBounds(rr, adjFile) && board[rr][adjFile] === `${color}p`) return true;
+    }
+  }
+  return false;
+}
+
+function evaluatePawnStructure(board) {
+  let score = 0;
+
+  for (let file = 0; file < 8; file++) {
+    const whiteCount = countPawnsOnFile(board, file, "w");
+    const blackCount = countPawnsOnFile(board, file, "b");
+
+    if (whiteCount > 1) score -= (whiteCount - 1) * 18;
+    if (blackCount > 1) score += (blackCount - 1) * 18;
+  }
+
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const piece = board[r][c];
+      if (!piece || getType(piece) !== "p") continue;
+
+      const color = getColor(piece);
+      let pawnScore = 0;
+
+      if (isIsolatedPawn(board, r, c, color)) pawnScore -= 14;
+      if (isConnectedPawn(board, r, c, color)) pawnScore += 10;
+
+      if (isPassedPawn(board, r, c, color)) {
+        const advance = color === "w" ? 6 - r : r - 1;
+        pawnScore += 20 + advance * 12;
+      }
+
+      score += color === "w" ? pawnScore : -pawnScore;
+    }
+  }
+
+  return score;
+}
+
+function evaluateRookActivity(board) {
+  let score = 0;
+
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const piece = board[r][c];
+      if (!piece || getType(piece) !== "r") continue;
+
+      const color = getColor(piece);
+      const ownPawn = fileHasPawn(board, c, color);
+      const enemyPawn = fileHasPawn(board, c, other(color));
+
+      let rookScore = 0;
+
+      if (!ownPawn && !enemyPawn) rookScore += 22;
+      else if (!ownPawn && enemyPawn) rookScore += 10;
+
+      if ((color === "w" && r === 1) || (color === "b" && r === 6)) {
+        rookScore += 16;
+      }
+
+      score += color === "w" ? rookScore : -rookScore;
+    }
+  }
+
+  return score;
+}
+
+function evaluateKnightOutposts(board) {
+  let score = 0;
+
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const piece = board[r][c];
+      if (!piece || getType(piece) !== "n") continue;
+
+      const color = getColor(piece);
+
+      if ((color === "w" && r > 4) || (color === "b" && r < 3)) continue;
+
+      let supportedByPawn = false;
+      const pawnSupportRow = color === "w" ? r + 1 : r - 1;
+
+      for (const dc of [-1, 1]) {
+        const sc = c + dc;
+        if (inBounds(pawnSupportRow, sc) && board[pawnSupportRow][sc] === `${color}p`) {
+          supportedByPawn = true;
+        }
+      }
+
+      let attackedByEnemyPawn = false;
+      const enemy = other(color);
+      const enemyPawnRow = color === "w" ? r - 1 : r + 1;
+
+      for (const dc of [-1, 1]) {
+        const ec = c + dc;
+        if (inBounds(enemyPawnRow, ec) && board[enemyPawnRow][ec] === `${enemy}p`) {
+          attackedByEnemyPawn = true;
+        }
+      }
+
+      let bonus = 0;
+      if (supportedByPawn) bonus += 12;
+      if (supportedByPawn && !attackedByEnemyPawn) bonus += 18;
+
+      score += color === "w" ? bonus : -bonus;
+    }
+  }
+
+  return score;
+}
+
+function evaluateKingSafety(board, endgame) {
+  if (endgame) return 0;
+
+  let score = 0;
+
+  for (const color of ["w", "b"]) {
+    const king = findKing(board, color);
+    if (!king) continue;
+
+    const [r, c] = king;
+    let kingScore = 0;
+
+    const distFromCenter = Math.abs(3.5 - r) + Math.abs(3.5 - c);
+    kingScore -= Math.max(0, 6 - distFromCenter) * 6;
+
+    const forward = color === "w" ? -1 : 1;
+    const shieldRow = r + forward;
+
+    for (const fc of [c - 1, c, c + 1]) {
+      if (inBounds(shieldRow, fc) && board[shieldRow][fc] === `${color}p`) {
+        kingScore += 12;
+      }
+    }
+
+    for (const fc of [c - 1, c, c + 1]) {
+      if (fc < 0 || fc > 7) continue;
+      const ownPawn = fileHasPawn(board, fc, color);
+      if (!ownPawn) kingScore -= 10;
+    }
+
+    score += color === "w" ? kingScore : -kingScore;
+  }
+
+  return score;
+}
+
+function evaluateBishopMobilityShape(board) {
+  let score = 0;
+
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const piece = board[r][c];
+      if (!piece || getType(piece) !== "b") continue;
+
+      const color = getColor(piece);
+      let bishopScore = 0;
+
+      const ownPawnPenaltySquares =
+        color === "w"
+          ? [[6, 3], [6, 4], [5, 3], [5, 4]]
+          : [[1, 3], [1, 4], [2, 3], [2, 4]];
+
+      for (const [pr, pc] of ownPawnPenaltySquares) {
+        if (board[pr][pc] === `${color}p`) bishopScore -= 4;
+      }
+
+      score += color === "w" ? bishopScore : -bishopScore;
+    }
+  }
+
+  return score;
+}
+
+function evaluateDevelopment(state) {
+  if (isEndgame(state)) return 0;
+
+  let score = 0;
+  const board = state.board;
+
+  if (board[7][1] === "wn") score -= 10;
+  if (board[7][6] === "wn") score -= 10;
+  if (board[7][2] === "wb") score -= 10;
+  if (board[7][5] === "wb") score -= 10;
+
+  if (board[0][1] === "bn") score += 10;
+  if (board[0][6] === "bn") score += 10;
+  if (board[0][2] === "bb") score += 10;
+  if (board[0][5] === "bb") score += 10;
+
+  const whiteKing = findKing(board, "w");
+  const blackKing = findKing(board, "b");
+
+  if (whiteKing && (whiteKing[1] === 6 || whiteKing[1] === 2)) score += 22;
+  if (blackKing && (blackKing[1] === 6 || blackKing[1] === 2)) score -= 22;
+
+  return score;
+}
+
+function evaluateCenterControl(board) {
+  let score = 0;
+
+  const coreCenter = [
+    [3, 3], [3, 4],
+    [4, 3], [4, 4],
+  ];
+
+  const extendedCenter = [
+    [2, 2], [2, 3], [2, 4], [2, 5],
+    [3, 2], [3, 5],
+    [4, 2], [4, 5],
+    [5, 2], [5, 3], [5, 4], [5, 5],
+  ];
+
+  for (const [r, c] of coreCenter) {
+    const piece = board[r][c];
+    if (!piece) continue;
+
+    const color = getColor(piece);
+    const type = getType(piece);
+
+    let value = 0;
+    if (type === "p") value = 30;
+    else if (type === "n") value = 24;
+    else if (type === "b") value = 18;
+    else if (type === "r") value = 8;
+    else if (type === "q") value = 10;
+    else if (type === "k") value = -12;
+
+    score += color === "w" ? value : -value;
+  }
+
+  for (const [r, c] of extendedCenter) {
+    const piece = board[r][c];
+    if (!piece) continue;
+
+    const color = getColor(piece);
+    const type = getType(piece);
+
+    let value = 0;
+    if (type === "p") value = 12;
+    else if (type === "n") value = 14;
+    else if (type === "b") value = 10;
+    else if (type === "r") value = 4;
+    else if (type === "q") value = 5;
+    else if (type === "k") value = -8;
+
+    score += color === "w" ? value : -value;
+  }
+
+  return score;
+}
+
 function evaluateBoard(state) {
   const cacheKey = `eval|${hashState(state)}`;
   if (EVAL_CACHE.has(cacheKey)) return EVAL_CACHE.get(cacheKey);
@@ -1467,12 +1766,25 @@ function evaluateBoard(state) {
     for (const piece of state.reserve?.b || []) score -= PIECE_VALUES[getType(piece)] * 0.35;
   }
 
-  const whiteSkipPenalty = (state.skipNext?.w || 0) * 260;
+    const whiteSkipPenalty = (state.skipNext?.w || 0) * 260;
   const blackSkipPenalty = (state.skipNext?.b || 0) * 260;
   score -= whiteSkipPenalty;
   score += blackSkipPenalty;
 
   score += (whitePawns - blackPawns) * 2;
+
+    if (activeVariant === "normal" || activeVariant === "worldwar") {
+    score += evaluatePawnStructure(state.board);
+    score += evaluateRookActivity(state.board);
+    score += evaluateKnightOutposts(state.board);
+    score += evaluateKingSafety(state.board, endgame);
+    score += evaluateBishopMobilityShape(state.board);
+    score += evaluateCenterControl(state.board);
+
+    if (isNormalLikeGame(state)) {
+      score += evaluateDevelopment(state);
+    }
+  }
 
   EVAL_CACHE.set(cacheKey, score);
   trimMap(EVAL_CACHE, EVAL_CACHE_MAX);
@@ -1578,6 +1890,10 @@ function getMoveOrderingScore(state, move) {
   const distFromCenter = Math.abs(3.5 - tr) + Math.abs(3.5 - tc);
   score += Math.round((7 - distFromCenter) * 6);
 
+  if (moveGivesCheck(state, move)) {
+    score += 220;
+  }
+
   return score;
 }
 
@@ -1598,10 +1914,14 @@ function quiescence(state, alpha, beta, maximizingPlayer, depthLeft = QUIESCENCE
 
   if (depthLeft <= 0) return standPat;
 
-  const tacticalMoves = orderMoves(state, allLegalMoves(state, state.turn)).filter((move) => {
+    const tacticalMoves = orderMoves(state, allLegalMoves(state, state.turn)).filter((move) => {
     if (move.resurrect || move.sacrifice) return false;
+
     const target = state.board[move.to[0]][move.to[1]];
-    return !!target || !!move.enPassant;
+    const isCapture = !!target || !!move.enPassant;
+    const isCheck = moveGivesCheck(state, move);
+
+    return isCapture || isCheck;
   });
 
   if (tacticalMoves.length === 0) return standPat;
