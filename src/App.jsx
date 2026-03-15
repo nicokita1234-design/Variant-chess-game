@@ -106,18 +106,167 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   {
     id: 1,
     type: "story",
-    title: "Part 1",
-    text: "Global Conquest begins.",
+    title: "Story 1",
+    text: "Global Conquest begins. Your campaign opens with a standard clash: normal chess against normal chess.",
   },
   {
     id: 2,
     type: "battle",
-    title: "Part 2",
-    missionName: "First Clash",
+    title: "Battle 1",
+    missionName: "Opening Duel",
     whiteArmy: "normal",
     blackArmy: "normal",
     variant: "worldwar",
     playerColor: "w",
+  },
+
+  {
+    id: 3,
+    type: "story",
+    title: "Story 2",
+    text: "Victory brings your first advance. The next enemy waiting ahead fights under Viking rules.",
+  },
+  {
+    id: 4,
+    type: "battle",
+    title: "Battle 2",
+    missionName: "The Viking Challenge",
+    whiteArmy: "viking",
+    blackArmy: "normal",
+    variant: "worldwar",
+    playerColor: "w",
+  },
+
+  {
+    id: 5,
+    type: "story",
+    title: "Story 3",
+    text: "With the Vikings defeated, you march onward. A Mongolian force now blocks your path.",
+  },
+  {
+    id: 6,
+    type: "battle",
+    title: "Battle 3",
+    missionName: "Horse Lords",
+    whiteArmy: "viking",
+    blackArmy: "mongolian",
+    variant: "worldwar",
+    playerColor: "w",
+  },
+
+  {
+    id: 7,
+    type: "story",
+    title: "Story 4",
+    text: "The Mongolian army becomes your next weapon. But now the Samurai await.",
+  },
+  {
+    id: 8,
+    type: "battle",
+    title: "Battle 4",
+    missionName: "Blades of the East",
+    whiteArmy: "samurai",
+    blackArmy: "mongolian",
+    variant: "worldwar",
+    playerColor: "b",
+  },
+
+  {
+    id: 9,
+    type: "story",
+    title: "Story 5",
+    text: "After surviving the Samurai, you press forward. The Spartans now stand in your way.",
+  },
+  {
+    id: 10,
+    type: "battle",
+    title: "Battle 5",
+    missionName: "Shieldwall",
+    whiteArmy: "samurai",
+    blackArmy: "spartan",
+    variant: "worldwar",
+    playerColor: "w",
+  },
+
+  {
+    id: 11,
+    type: "story",
+    title: "Story 6",
+    text: "The Spartan line finally breaks. Beyond them waits the Persian Immortals.",
+  },
+  {
+    id: 12,
+    type: "battle",
+    title: "Battle 6",
+    missionName: "Immortal Advance",
+    whiteArmy: "persian",
+    blackArmy: "spartan",
+    variant: "worldwar",
+    playerColor: "b",
+  },
+
+  {
+    id: 13,
+    type: "story",
+    title: "Story 7",
+    text: "You now command the Persian Immortals. Rome rises ahead, determined to stop your conquest.",
+  },
+  {
+    id: 14,
+    type: "battle",
+    title: "Battle 7",
+    missionName: "Fall of Rome",
+    whiteArmy: "persian",
+    blackArmy: "roman",
+    variant: "worldwar",
+    playerColor: "w",
+  },
+
+  {
+    id: 15,
+    type: "story",
+    title: "Story 8",
+    text: "Rome has fallen. Only Hannibal remains between you and total conquest.",
+  },
+  {
+    id: 16,
+    type: "battle",
+    title: "Battle 8",
+    missionName: "The Great General",
+    whiteArmy: "hannibal",
+    blackArmy: "roman",
+    variant: "worldwar",
+    playerColor: "b",
+  },
+
+  {
+    id: 17,
+    type: "story",
+    title: "Story 9",
+    text: "Hannibal is defeated. But the true final ruler now reveals himself: Alexander.",
+  },
+  {
+    id: 18,
+    type: "battle",
+    title: "Final Battle",
+    missionName: "Alexander the Great",
+    whiteArmy: "hannibal",
+    blackArmy: "alexander",
+    variant: "worldwar",
+    playerColor: "w",
+  },
+
+  {
+    id: 19,
+    type: "story",
+    title: "Story 10",
+    text: "The campaign is over. The final enemy has fallen, and your conquest is complete.",
+  },
+  {
+    id: 20,
+    type: "story",
+    title: "End Credits",
+    text: "Thanks for playing Global Conquest.",
   },
 ];
 
@@ -3227,13 +3376,20 @@ useEffect(() => {
   if (!campaign.inBattle) return;
   if (mode !== "ai") return;
 
+  const status = game.status || "";
+
   const playerWon =
-    (playerColor === "w" && game.status.includes("White wins")) ||
-    (playerColor === "b" && game.status.includes("Black wins"));
+    (playerColor === "w" && status.includes("White wins")) ||
+    (playerColor === "b" && status.includes("Black wins"));
 
   const playerLost =
-    (playerColor === "w" && game.status.includes("Black wins")) ||
-    (playerColor === "b" && game.status.includes("White wins"));
+    (playerColor === "w" && status.includes("Black wins")) ||
+    (playerColor === "b" && status.includes("White wins"));
+
+  const isDraw =
+    status.includes("Stalemate") ||
+    status.includes("Draw") ||
+    status.includes("insufficient material");
 
   if (playerWon) {
     const completedIndex = campaign.chapterIndex;
@@ -3256,6 +3412,12 @@ useEffect(() => {
     saveCampaignProgress(updatedCampaign);
 
     setTimeout(() => {
+      setEndOverlay(null);
+      setSkipOverlay(null);
+      setResurrectionOverlay(null);
+      setKatanaEffect(null);
+      setLastMove(null);
+
       setCampaign(updatedCampaign);
       setMode("campaign");
       setVariant(null);
@@ -3270,10 +3432,26 @@ useEffect(() => {
     return;
   }
 
+  if (isDraw) {
+    setEndOverlay({
+      kind: "draw",
+      message: "Draw. Retry this chapter or forfeit?",
+      campaignDraw: true,
+      triggeredAt: Date.now(),
+    });
+    return;
+  }
+
   if (playerLost) {
     clearCampaignProgress();
 
     setTimeout(() => {
+      setEndOverlay(null);
+      setSkipOverlay(null);
+      setResurrectionOverlay(null);
+      setKatanaEffect(null);
+      setLastMove(null);
+
       setCampaign(null);
       setMode(null);
       setVariant(null);
@@ -3383,6 +3561,9 @@ function continueSavedCampaign() {
 function startCampaignBattle(chapter) {
   if (!campaign) return;
 
+  cancelAiThinking();
+  clearEngineCaches();
+
   const updatedCampaign = {
     ...campaign,
     inBattle: true,
@@ -3392,14 +3573,83 @@ function startCampaignBattle(chapter) {
   saveCampaignProgress(updatedCampaign);
   setCampaign(updatedCampaign);
 
-  clearEngineCaches();
-  setPlayerColor(chapter.playerColor || "w");
-  setVariant(chapter.variant || "worldwar");
+  setEndOverlay(null);
+  setSkipOverlay(null);
+  setResurrectionOverlay(null);
+  setKatanaEffect(null);
+  setLastMove(null);
+  setSelectedReserve(null);
+  setPendingPromotion(null);
+  setHannibalSetup(null);
+  setHannibalSelectedSlot(null);
+  setWorldWarSetup(null);
+  setThinking(false);
+  setThinkingLabel("");
+
+  const resolvedVariant = chapter.variant || "worldwar";
+  const resolvedPlayerColor = chapter.playerColor || "w";
+  const whiteArmy = chapter.whiteArmy || "normal";
+  const blackArmy = chapter.blackArmy || "normal";
+
+  setPlayerColor(resolvedPlayerColor);
+  setVariant(resolvedVariant);
+
+  const humanNeedsHannibal =
+    (resolvedPlayerColor === "w" && whiteArmy === "hannibal") ||
+    (resolvedPlayerColor === "b" && blackArmy === "hannibal");
+
+  const anyHannibal = whiteArmy === "hannibal" || blackArmy === "hannibal";
+
+  if (resolvedVariant === "worldwar" && humanNeedsHannibal) {
+    setHannibalSetup({
+      worldWar: true,
+      mode: "ai",
+      playerColor: resolvedPlayerColor,
+      phase: resolvedPlayerColor,
+      whiteArmy,
+      blackArmy,
+      whiteRank: getDefaultHannibalBackRank("w"),
+      blackRank: getDefaultHannibalBackRank("b"),
+    });
+    setMode("ai");
+    return;
+  }
+
+  if (resolvedVariant === "worldwar" && anyHannibal) {
+    const base = createInitialState("worldwar", whiteArmy, blackArmy);
+    let board = cloneBoard(base.board);
+
+    const config = {
+      mode: "ai",
+      playerColor: resolvedPlayerColor,
+      whiteArmy,
+      blackArmy,
+    };
+
+    if (shouldShuffleHannibalBackRank(config, "w")) {
+      board = applyHannibalBackRank(board, "w", shuffleArray(getDefaultHannibalBackRank("w")));
+    }
+
+    if (shouldShuffleHannibalBackRank(config, "b")) {
+      board = applyHannibalBackRank(board, "b", shuffleArray(getDefaultHannibalBackRank("b")));
+    }
+
+    setGame({
+      ...base,
+      board,
+      variant: "worldwar",
+      whiteArmy,
+      blackArmy,
+    });
+    setMode("ai");
+    return;
+  }
+
   setGame(
     createInitialState(
-      chapter.variant || "worldwar",
-      chapter.whiteArmy,
-      chapter.blackArmy
+      resolvedVariant,
+      whiteArmy,
+      blackArmy
     )
   );
   setMode("ai");
@@ -3973,6 +4223,41 @@ function clearCampaignProgress() {
     };
   }, [game, mode, playerColor, hannibalSetup, worldWarSetup, pendingPromotion]);
 
+    function triggerDevResult(resultType) {
+    if (mode !== "ai" && mode !== "pvp") return;
+    if (hannibalSetup || worldWarSetup || pendingPromotion) return;
+
+    cancelAiThinking();
+
+    let status = "Draw.";
+    let overlayKind = "draw";
+
+    if (resultType === "win") {
+      status = playerColor === "b" ? "Black wins." : "White wins.";
+      overlayKind = "victory";
+    } else if (resultType === "loss") {
+      status = playerColor === "b" ? "White wins." : "Black wins.";
+      overlayKind = "victory";
+    } else if (resultType === "draw") {
+      status = "Draw.";
+      overlayKind = "draw";
+    }
+
+    setGame((prev) => ({
+      ...prev,
+      gameOver: true,
+      status,
+      selected: null,
+      legalMoves: [],
+    }));
+
+    setEndOverlay({
+      kind: overlayKind,
+      message: status,
+      triggeredAt: Date.now(),
+    });
+  }
+
      if (!mode) {
     const savedCampaign = loadCampaignProgress();
 
@@ -4346,57 +4631,69 @@ if (mode === "campaign" && campaign) {
     }`}
             </p>
           </div>
-          <div className="flex gap-2 shrink-0">
-            <button
-              onClick={() => {
-                cancelAiThinking();
-                setPendingPromotion(null);
-                resetGame();
-              }}
-              className="px-4 py-2 bg-neutral-200 rounded-xl"
-            >
-              New Game
-            </button>
-            <button
-              onClick={() => {
-                cancelAiThinking();
-                clearEngineCaches();
-                setPendingPromotion(null);
-                setMode(null);
-                setPlayerColor(null);
-                setVariant(null);
-                setWorldWarSetup(null);
-                setHannibalSetup(null);
-                setHannibalSelectedSlot(null);
-                setSelectedReserve(null);
-                setLastMove(null);
-                setKatanaEffect(null);
-                setEndOverlay(null);
-                setSkipOverlay(null);
-                setResurrectionOverlay(null);
-                setGame(createInitialState("normal"));
-              }}
-              className="px-4 py-2 bg-neutral-800 text-white rounded-xl"
-            >
-              Menu
-            </button>
-          </div>
-        </div>
+{import.meta.env.DEV && (
+  <div className="flex gap-2 shrink-0">
+    <>
+      <button
+        onClick={() => triggerDevResult("win")}
+        className="px-4 py-2 bg-green-700 text-white rounded-xl"
+      >
+        Dev Win
+      </button>
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(760px,820px)_320px] items-start">
-          <div className="w-full min-w-[760px] flex items-start gap-3">
-            {evalBarMode && (
-              <div className="flex h-[calc(min(100vw,820px))] max-h-[820px] min-h-[760px] w-8 shrink-0 overflow-hidden rounded-2xl border bg-white shadow-lg">
-                <div className="relative flex h-full w-full flex-col-reverse">
-                  <div className="w-full bg-white transition-all duration-500" style={{ height: `${gameSummary.whitePercent}%` }} title={`White ${Math.round(gameSummary.whitePercent)}%`} />
-                  <div className="w-full bg-neutral-900 transition-all duration-500" style={{ height: `${100 - gameSummary.whitePercent}%` }} title={`Black ${Math.round(100 - gameSummary.whitePercent)}%`} />
-                  <div className="pointer-events-none absolute inset-0 flex flex-col justify-between py-2 text-center text-[10px] font-semibold">
-                    <span className="text-neutral-900">W</span>
-                    <span className="text-white">B</span>
-                  </div>
-                </div>
-              </div>
-            )}
+      <button
+        onClick={() => triggerDevResult("loss")}
+        className="px-4 py-2 bg-red-700 text-white rounded-xl"
+      >
+        Dev Loss
+      </button>
+
+      <button
+        onClick={() => triggerDevResult("draw")}
+        className="px-4 py-2 bg-yellow-600 text-white rounded-xl"
+      >
+        Dev Draw
+      </button>
+    </>
+
+    <button
+      onClick={() => {
+        cancelAiThinking();
+        setPendingPromotion(null);
+        resetGame();
+      }}
+      className="px-4 py-2 bg-neutral-200 rounded-xl"
+    >
+      New Game
+    </button>
+
+    <button
+      onClick={() => {
+        cancelAiThinking();
+        clearEngineCaches();
+        setPendingPromotion(null);
+        setMode(null);
+        setPlayerColor(null);
+        setVariant(null);
+        setWorldWarSetup(null);
+        setHannibalSetup(null);
+        setHannibalSelectedSlot(null);
+        setSelectedReserve(null);
+        setLastMove(null);
+        setKatanaEffect(null);
+        setEndOverlay(null);
+        setSkipOverlay(null);
+        setResurrectionOverlay(null);
+        setGame(createInitialState("normal"));
+      }}
+      className="px-4 py-2 bg-neutral-800 text-white rounded-xl"
+    >
+      Menu
+    </button>
+  </div>
+)}
+
+<div className="grid gap-4 xl:grid-cols-[minmax(760px,820px)_320px] items-start">
             <div className="grid grid-cols-[32px_repeat(8,minmax(84px,1fr))] grid-rows-[repeat(8,minmax(84px,1fr))_32px] border bg-white rounded-2xl overflow-hidden shadow-lg aspect-square">
               {rowOrder.map((r) => (
                 <React.Fragment key={r}>
@@ -4787,15 +5084,85 @@ if (mode === "campaign" && campaign) {
       )}
 
       {endOverlay && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-          <div className={`absolute inset-0 ${endOverlay.kind === "victory" ? "bg-black/55" : "bg-neutral-900/45"} animate-pulse`} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className={`absolute inset-0 ${
+              endOverlay.kind === "victory" ? "bg-black/55" : "bg-neutral-900/45"
+            } animate-pulse`}
+          />
           <div className="relative flex flex-col items-center justify-center px-6 text-center">
-            <div className={`mb-6 text-[clamp(3rem,10vw,7rem)] font-black tracking-[0.18em] uppercase drop-shadow-2xl animate-bounce ${endOverlay.kind === "victory" ? "text-yellow-300" : "text-sky-200"}`}>
+            <div
+              className={`mb-6 text-[clamp(3rem,10vw,7rem)] font-black tracking-[0.18em] uppercase drop-shadow-2xl animate-bounce ${
+                endOverlay.kind === "victory" ? "text-yellow-300" : "text-sky-200"
+              }`}
+            >
               {endOverlay.kind === "victory" ? "Checkmate" : "Draw"}
             </div>
-            <div className={`rounded-3xl border px-8 py-5 text-lg md:text-2xl font-bold shadow-2xl backdrop-blur-sm ${endOverlay.kind === "victory" ? "border-yellow-200/70 bg-yellow-100/12 text-white" : "border-sky-200/70 bg-sky-100/12 text-white"}`}>
+
+            <div
+              className={`rounded-3xl border px-8 py-5 text-lg md:text-2xl font-bold shadow-2xl backdrop-blur-sm ${
+                endOverlay.kind === "victory"
+                  ? "border-yellow-200/70 bg-yellow-100/12 text-white"
+                  : "border-sky-200/70 bg-sky-100/12 text-white"
+              }`}
+            >
               {endOverlay.message}
             </div>
+
+            {endOverlay.campaignDraw && campaign && (
+              <div className="mt-5 flex gap-3 pointer-events-auto">
+                <button
+                  onClick={() => {
+                    setEndOverlay(null);
+                    setSkipOverlay(null);
+                    setResurrectionOverlay(null);
+                    setKatanaEffect(null);
+                    setLastMove(null);
+
+                    const chapter = campaign.chapters[campaign.chapterIndex];
+                    if (chapter) {
+                      startCampaignBattle(chapter);
+                    }
+                  }}
+                  className="px-5 py-3 rounded-2xl bg-green-700 text-white font-semibold shadow-lg"
+                >
+                  Retry Chapter
+                </button>
+
+                <button
+                  onClick={() => {
+                    clearCampaignProgress();
+
+                    setEndOverlay({
+                      kind: "victory",
+                      message: "You forfeited. Campaign failed.",
+                      triggeredAt: Date.now(),
+                    });
+
+                    setTimeout(() => {
+                      setEndOverlay(null);
+                      setSkipOverlay(null);
+                      setResurrectionOverlay(null);
+                      setKatanaEffect(null);
+                      setLastMove(null);
+
+                      setCampaign(null);
+                      setMode(null);
+                      setVariant(null);
+                      setPlayerColor(null);
+                      setWorldWarSetup(null);
+                      setHannibalSetup(null);
+                      setSelectedReserve(null);
+                      setPendingPromotion(null);
+                      setGame(createInitialState("normal"));
+                    }, 1400);
+                  }}
+                  className="px-5 py-3 rounded-2xl bg-red-700 text-white font-semibold shadow-lg"
+                >
+                  Forfeit
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
