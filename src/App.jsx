@@ -29,12 +29,13 @@ const STRONG_AI_MAX_ROOT = 14;
 const TT_MAX_SIZE = 30000;
 const LEGAL_CACHE_MAX = 16000;
 const EVAL_CACHE_MAX = 16000;
+const GLOBAL_CONQUEST_SAVE_KEY = "global_conquest_progress_v1";
 
 const GLOBAL_TT = new Map();
 const LEGAL_CACHE = new Map();
 const EVAL_CACHE = new Map();
 
-const ARMY_OPTIONS = ["normal", "mongolian", "samurai", "spartan", "viking", "hannibal", "persian", "roman"];
+const ARMY_OPTIONS = ["normal", "mongolian", "samurai", "spartan", "viking", "hannibal", "persian", "roman", "alexander"];
 
 const VARIANT_RULES = {
   normal: {
@@ -92,7 +93,33 @@ Kings may move into attacked squares, but doing so immediately loses.
 If either King is captured the game is lost.
 One Roman King may castle with a rook.`,
   },
+  alexander: {
+    title: "Alexander Chess",
+    text: `Alexander uses a unique elite formation.
+There is no Queen.
+The King moves like a Queen while remaining the royal piece.
+If the Alexander King is captured or checkmated, that side loses.`,
+  },
 };
+
+const GLOBAL_CONQUEST_CHAPTERS = [
+  {
+    id: 1,
+    type: "story",
+    title: "Part 1",
+    text: "Global Conquest begins.",
+  },
+  {
+    id: 2,
+    type: "battle",
+    title: "Part 2",
+    missionName: "First Clash",
+    whiteArmy: "normal",
+    blackArmy: "normal",
+    variant: "worldwar",
+    playerColor: "w",
+  },
+];
 
 const OPENING_BOOK = [
   { name: "King's Pawn Game", moves: ["e2e4"] },
@@ -496,6 +523,8 @@ function variantLabelName(name) {
     ? "World War"
     : name === "random"
     ? "Random"
+    : name === "alexander"
+    ? "Alexander"
     : "Unknown";
 }
 
@@ -553,10 +582,21 @@ function variantButtonClass(name, selected = false) {
         ? "bg-fuchsia-700 text-white"
         : "bg-fuchsia-100 text-fuchsia-900 border border-fuchsia-300";
       break;
+    case "alexander":
+      palette = selected
+        ? "bg-indigo-900 text-yellow-300 border-4 border-yellow-400"
+        : "bg-indigo-900 text-yellow-300 border-4 border-yellow-400 opacity-40 saturate-50";
+      break;
+    case "globalconquest":
+      palette = selected
+        ? "bg-black text-yellow-300 border-4 border-yellow-500"
+        : "bg-neutral-900 text-yellow-300 border-4 border-yellow-500 opacity-40 saturate-50";
+      break;
     default:
       palette = selected
         ? "bg-neutral-900 text-white"
         : "bg-neutral-200 text-neutral-900 border border-neutral-300";
+      break;
   }
 
   return `px-4 py-2 rounded-xl font-medium transition-colors ${palette}`;
@@ -581,6 +621,19 @@ function getArmyStartLayout(army, color) {
         ];
   }
 
+if (army === "alexander") {
+  return color === "w"
+    ? [
+        { row: 5, pieces: Array(8).fill(`${prefix}b`) },
+        { row: 6, pieces: Array(8).fill(`${prefix}p`) },
+        { row: 7, pieces: [`${prefix}r`, `${prefix}n`, `${prefix}n`, `${prefix}n`, `${prefix}k`, `${prefix}n`, `${prefix}n`, `${prefix}r`] },
+      ]
+    : [
+        { row: 0, pieces: [`${prefix}r`, `${prefix}n`, `${prefix}n`, `${prefix}n`, `${prefix}k`, `${prefix}n`, `${prefix}n`, `${prefix}r`] },
+        { row: 1, pieces: Array(8).fill(`${prefix}p`) },
+        { row: 2, pieces: Array(8).fill(`${prefix}b`) },
+      ];
+}
   const backRank =
     army === "spartan"
       ? [`${prefix}r`, `${prefix}n`, `${prefix}n`, `${prefix}q`, `${prefix}k`, `${prefix}n`, `${prefix}n`, `${prefix}r`]
@@ -877,12 +930,18 @@ function isSquareAttacked(board, row, col, byColor, variant = "normal", state = 
     }
   }
 
-  const knightSteps = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
-  for (const [dr, dc] of knightSteps) {
-    const r = row + dr;
-    const c = col + dc;
-    if (inBounds(r, c) && board[r][c] === `${byColor}n`) return true;
-  }
+const knightSteps = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+for (const [dr, dc] of knightSteps) {
+  const r = row + dr;
+  const c = col + dc;
+  if (!inBounds(r, c)) continue;
+
+  const piece = board[r][c];
+  if (!piece || getColor(piece) !== byColor) continue;
+
+  if (piece === `${byColor}n`) return true;
+  if (activeArmy === "alexander" && piece === `${byColor}k`) return true;
+}
 
   const sliderMaxRange = activeArmy === "persian" ? 4 : 8;
 
@@ -929,14 +988,15 @@ function isSquareAttacked(board, row, col, byColor, variant = "normal", state = 
     }
   }
 
-  for (let dr = -1; dr <= 1; dr++) {
-    for (let dc = -1; dc <= 1; dc++) {
-      if (dr === 0 && dc === 0) continue;
-      const r = row + dr;
-      const c = col + dc;
-      if (inBounds(r, c) && board[r][c] === `${byColor}k`) return true;
-    }
+for (let dr = -1; dr <= 1; dr++) {
+  for (let dc = -1; dc <= 1; dc++) {
+    if (dr === 0 && dc === 0) continue;
+    const r = row + dr;
+    const c = col + dc;
+    if (!inBounds(r, c)) continue;
+    if (board[r][c] === `${byColor}k`) return true;
   }
+}
 
   return false;
 }
@@ -1004,14 +1064,17 @@ function generatePseudoMoves(state, row, col) {
       return moves;
     }
 
-    const oneStep = row + dir;
-    if (inBounds(oneStep, col) && !board[oneStep][col]) {
-      moves.push({ from: [row, col], to: [oneStep, col] });
-      const twoStep = row + 2 * dir;
-      if (row === startRow && inBounds(twoStep, col) && !board[twoStep][col]) {
-        moves.push({ from: [row, col], to: [twoStep, col], doublePawn: true });
-      }
+const oneStep = row + dir;
+if (inBounds(oneStep, col) && !board[oneStep][col]) {
+  moves.push({ from: [row, col], to: [oneStep, col] });
+
+  if (movingArmy !== "alexander") {
+    const twoStep = row + 2 * dir;
+    if (row === startRow && inBounds(twoStep, col) && !board[twoStep][col]) {
+      moves.push({ from: [row, col], to: [twoStep, col], doublePawn: true });
     }
+  }
+}
 
     for (const dc of [-1, 1]) {
       const nr = row + dir;
@@ -1035,6 +1098,7 @@ function generatePseudoMoves(state, row, col) {
       const target = board[nr][nc];
       if (!target || getColor(target) !== color) moves.push({ from: [row, col], to: [nr, nc], capture: !!target });
     }
+
     return moves;
   }
 
@@ -1042,14 +1106,23 @@ function generatePseudoMoves(state, row, col) {
     const dirs = [];
     if (type === "b" || type === "q") dirs.push([1, 1], [1, -1], [-1, 1], [-1, -1]);
     if (type === "r" || type === "q") dirs.push([1, 0], [-1, 0], [0, 1], [0, -1]);
-    const maxRange = movingArmy === "persian" ? 4 : 8;
+    const maxRange =
+  movingArmy === "persian"
+    ? 4
+    : movingArmy === "alexander" && type === "b"
+    ? 3
+    : 8;
 
     for (const [dr, dc] of dirs) {
+      let directionMaxRange = maxRange;
+if (movingArmy === "alexander" && type === "r") {
+  if (dc !== 0) directionMaxRange = 1; // horizontal moves only 1
+}
       let nr = row + dr;
       let nc = col + dc;
       const isVikingVerticalRook = movingArmy === "viking" && type === "r" && dc === 0;
       let steps = 0;
-      while (inBounds(nr, nc) && steps < maxRange) {
+while (inBounds(nr, nc) && steps < directionMaxRange) {
         steps += 1;
         const target = board[nr][nc];
         if (!target) {
@@ -1073,7 +1146,39 @@ function generatePseudoMoves(state, row, col) {
     return moves;
   }
 
-  if (type === "k") {
+if (type === "k") {
+  if (movingArmy === "alexander") {
+    const kingSteps = [
+      [-1, -1], [-1, 0], [-1, 1],
+      [0, -1],           [0, 1],
+      [1, -1],  [1, 0],  [1, 1],
+    ];
+
+    const knightSteps = [
+      [-2, -1], [-2, 1], [-1, -2], [-1, 2],
+      [1, -2], [1, 2], [2, -1], [2, 1],
+    ];
+
+    for (const [dr, dc] of kingSteps) {
+      const nr = row + dr;
+      const nc = col + dc;
+      if (!inBounds(nr, nc)) continue;
+      const target = board[nr][nc];
+      if (!target || getColor(target) !== color) {
+        moves.push({ from: [row, col], to: [nr, nc], capture: !!target });
+      }
+    }
+
+    for (const [dr, dc] of knightSteps) {
+      const nr = row + dr;
+      const nc = col + dc;
+      if (!inBounds(nr, nc)) continue;
+      const target = board[nr][nc];
+      if (!target || getColor(target) !== color) {
+        moves.push({ from: [row, col], to: [nr, nc], capture: !!target });
+      }
+    }
+  } else {
     for (let dr = -1; dr <= 1; dr++) {
       for (let dc = -1; dc <= 1; dc++) {
         if (dr === 0 && dc === 0) continue;
@@ -1081,39 +1186,42 @@ function generatePseudoMoves(state, row, col) {
         const nc = col + dc;
         if (!inBounds(nr, nc)) continue;
         const target = board[nr][nc];
-        if (!target || getColor(target) !== color) moves.push({ from: [row, col], to: [nr, nc], capture: !!target });
-      }
-    }
-
-    const homeRow = color === "w" ? 7 : 0;
-    const canConsiderCastling = movingArmy === "roman"
-      ? row === homeRow && col === 4
-      : (!isInCheck(board, color, state.variant, state) && row === homeRow && col === 4);
-
-    if (canConsiderCastling) {
-      if (
-        castling[color].k &&
-        !board[homeRow][5] &&
-        !board[homeRow][6] &&
-        board[homeRow][7] === `${color}r` &&
-        (movingArmy === "roman" || (!isSquareAttacked(board, homeRow, 5, other(color), state.variant, state) && !isSquareAttacked(board, homeRow, 6, other(color), state.variant, state)))
-      ) {
-        moves.push({ from: [row, col], to: [homeRow, 6], castle: "k" });
-      }
-      if (
-        castling[color].q &&
-        !board[homeRow][1] &&
-        !board[homeRow][2] &&
-        !board[homeRow][3] &&
-        board[homeRow][0] === `${color}r` &&
-        (movingArmy === "roman" || (!isSquareAttacked(board, homeRow, 3, other(color), state.variant, state) && !isSquareAttacked(board, homeRow, 2, other(color), state.variant, state)))
-      ) {
-        moves.push({ from: [row, col], to: [homeRow, 2], castle: "q" });
+        if (!target || getColor(target) !== color) {
+          moves.push({ from: [row, col], to: [nr, nc], capture: !!target });
+        }
       }
     }
   }
 
-  return moves;
+  const homeRow = color === "w" ? 7 : 0;
+  const canConsiderCastling = movingArmy === "roman"
+    ? row === homeRow && col === 4
+    : (!isInCheck(board, color, state.variant, state) && row === homeRow && col === 4);
+
+  if (canConsiderCastling) {
+    if (
+      castling[color].k &&
+      !board[homeRow][5] &&
+      !board[homeRow][6] &&
+      board[homeRow][7] === `${color}r` &&
+      (movingArmy === "roman" || (!isSquareAttacked(board, homeRow, 5, other(color), state.variant, state) && !isSquareAttacked(board, homeRow, 6, other(color), state.variant, state)))
+    ) {
+      moves.push({ from: [row, col], to: [homeRow, 6], castle: "k" });
+    }
+    if (
+      castling[color].q &&
+      !board[homeRow][1] &&
+      !board[homeRow][2] &&
+      !board[homeRow][3] &&
+      board[homeRow][0] === `${color}r` &&
+      (movingArmy === "roman" || (!isSquareAttacked(board, homeRow, 3, other(color), state.variant, state) && !isSquareAttacked(board, homeRow, 2, other(color), state.variant, state)))
+    ) {
+      moves.push({ from: [row, col], to: [homeRow, 2], castle: "q" });
+    }
+  }
+
+    return moves;
+  }
 }
 
 function applyPendingSkips(state) {
@@ -1487,6 +1595,79 @@ function fileHasPawn(board, file, color) {
     if (board[r][file] === `${color}p`) return true;
   }
   return false;
+}
+
+function countDevelopedMinorPieces(state, color) {
+  let count = 0;
+  const homeRow = color === "w" ? 7 : 0;
+
+  const homeSquares = color === "w"
+    ? [[7,1,"n"], [7,6,"n"], [7,2,"b"], [7,5,"b"]]
+    : [[0,1,"n"], [0,6,"n"], [0,2,"b"], [0,5,"b"]];
+
+  for (const [r, c, type] of homeSquares) {
+    const piece = state.board[r][c];
+    if (piece !== `${color}${type}`) count += 1;
+  }
+
+  return count;
+}
+
+function getBestImmediateAttackFromSquare(state, row, col, color) {
+  const piece = state.board[row][col];
+  if (!piece || getColor(piece) !== color) return 0;
+
+  const pseudo = generatePseudoMoves(state, row, col);
+  let best = 0;
+
+  for (const move of pseudo) {
+    const target = state.board[move.to[0]][move.to[1]];
+    if (target && getColor(target) !== color) {
+      const value = PIECE_VALUES[getType(target)] || 0;
+      if (value > best) best = value;
+    }
+  }
+
+  return best;
+}
+
+function getPersianDefensiveResurrectionBonus(beforeState, afterState, move) {
+  const color = getColor(move.piece);
+  const king = findKing(afterState.board, color);
+  if (!king) return 0;
+
+  const [kr, kc] = king;
+  const [tr, tc] = move.to;
+
+  let score = 0;
+  const dist = Math.abs(kr - tr) + Math.abs(kc - tc);
+
+  // Nearby defenders matter
+  if (dist <= 2) score += 80;
+  else if (dist <= 3) score += 35;
+
+  // If king was under pressure, reward extra
+  const enemy = other(color);
+  let attackedRingBefore = 0;
+  let attackedRingAfter = 0;
+
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      const rr = kr + dr;
+      const cc = kc + dc;
+      if (!inBounds(rr, cc)) continue;
+
+      if (isSquareAttacked(beforeState.board, rr, cc, enemy, beforeState.variant || "normal", beforeState)) {
+        attackedRingBefore += 1;
+      }
+      if (isSquareAttacked(afterState.board, rr, cc, enemy, afterState.variant || "normal", afterState)) {
+        attackedRingAfter += 1;
+      }
+    }
+  }
+
+  score += (attackedRingBefore - attackedRingAfter) * 30;
+  return score;
 }
 
 function countPawnsOnFile(board, file, color) {
@@ -2100,70 +2281,126 @@ function isPersianSide(state, color = state.turn) {
 
 function getPersianReserveValueFactor(state) {
   const phase = getGamePhase(state);
-  if (phase === "opening") return 0.46;
-  if (phase === "middlegame") return 0.14;
-  if (phase === "late") return 0.22;
-  return 0.30;
+  if (phase === "opening") return 0.28;
+  if (phase === "middlegame") return 0.12;
+  if (phase === "late") return 0.20;
+  return 0.24;
 }
 
 function getPersianSkipPenalty(state) {
   const phase = getGamePhase(state);
-  if (phase === "opening") return 110;
-  if (phase === "middlegame") return 430;
-  if (phase === "late") return 240;
-  return 180;
+  if (phase === "opening") return 140;
+  if (phase === "middlegame") return 520;
+  if (phase === "late") return 220;
+  return 160;
 }
 
 function scorePersianResurrectionMove(state, move) {
   if (!move?.resurrect) return -999999;
 
-  const type = getType(move.piece);
+  const piece = move.piece;
+  const type = getType(piece);
+  const color = getColor(piece);
+  const opponent = other(color);
   const phase = getGamePhase(state);
-  const inCheckNow = isInCheck(state.board, state.turn, state.variant || "normal", state);
-  const file = move.to[1];
+  const inCheckNow = isInCheck(state.board, color, state.variant || "normal", state);
+  const [tr, tc] = move.to;
 
-  let score = (PIECE_VALUES[type] || 0) * 0.45;
+  let score = 0;
 
-  // Opening: fairly happy to rebuild minor pieces early.
+  const baseValue =
+    type === "q" ? 520 :
+    type === "r" ? 360 :
+    type === "b" ? 250 :
+    type === "n" ? 250 :
+    type === "p" ? 70 : 0;
+
+  score += baseValue;
+
+  // Phase tuning
   if (phase === "opening") {
-    if (type === "n" || type === "b") score += 180;
-    if (type === "r") score += 70;
-    if (type === "q") score -= 150;
+    if (type === "n" || type === "b") score += 140;
+    if (type === "r") score += 40;
+    if (type === "q") score -= 180;
+    if (type === "p") score -= 80;
+  } else if (phase === "middlegame") {
+    if (type === "n" || type === "b") score += 20;
+    if (type === "r") score += 60;
+    if (type === "q") score -= 80;
     if (type === "p") score -= 40;
-    if (file >= 2 && file <= 5) score += 24;
+  } else {
+    // late / endgame
+    if (type === "q") score += 160;
+    if (type === "r") score += 120;
+    if (type === "n" || type === "b") score += 40;
   }
 
-  // Middlegame: strongly discourage resurrection unless urgent.
-  if (phase === "middlegame") {
-    score -= 320;
-    if (type === "q") score -= 220;
-    if (type === "r") score -= 160;
-    if (type === "n" || type === "b") score -= 90;
-    if (type === "p") score -= 50;
+  // Central and useful squares
+  const distFromCenter = Math.abs(3.5 - tr) + Math.abs(3.5 - tc);
+  score += Math.round((7 - distFromCenter) * 10);
+
+  // Minor-piece development squares
+  if ((type === "n" || type === "b") && (tc >= 2 && tc <= 5)) {
+    score += 40;
   }
 
-  // Endgame / late: useful again, but not spammed.
-  if (phase === "late" || phase === "endgame") {
-    if (type === "q") score += 120;
-    if (type === "r") score += 90;
-    if (type === "n" || type === "b") score += 45;
+  // Rooks like open / semi-open files and back-rank activity
+  if (type === "r") {
+    const ownPawn = fileHasPawn(state.board, tc, color);
+    const enemyPawn = fileHasPawn(state.board, tc, opponent);
+    if (!ownPawn && !enemyPawn) score += 70;
+    else if (!ownPawn) score += 35;
+
+    if ((color === "w" && tr <= 2) || (color === "b" && tr >= 5)) {
+      score += 40;
+    }
+  }
+
+  // Queen should not usually come back too early
+  if (type === "q" && phase === "opening") {
+    const developedMinorCount = countDevelopedMinorPieces(state, color);
+    if (developedMinorCount < 2) score -= 120;
   }
 
   const result = applyMoveToState(state, move, "q");
   const nextState = buildChildState(state, result);
 
-  if (inCheckNow && !isInCheck(nextState.board, state.turn, nextState.variant || "normal", nextState)) {
-    score += 700;
+  // Huge bonus if it escapes check
+  const stillInCheck = isInCheck(nextState.board, color, nextState.variant || "normal", nextState);
+  if (inCheckNow) {
+    if (!stillInCheck) score += 900;
+    else score -= 1200;
   }
 
-  if (moveGivesCheck(state, move)) {
-    score += 180;
+  // Reward forcing power
+  if (moveGivesCheck(state, move)) score += 220;
+
+  const opponentLegal = allLegalMoves(nextState, opponent);
+  if (opponentLegal.length <= 6) score += 120;
+  if (opponentLegal.length <= 3) score += 180;
+
+  // Reward if resurrected piece attacks something immediately
+  const attackedValue = getBestImmediateAttackFromSquare(nextState, tr, tc, color);
+  score += attackedValue * 0.45;
+
+  // Reward if piece defends important nearby squares around own king
+  score += getPersianDefensiveResurrectionBonus(state, nextState, move);
+
+  // Penalty if resurrected piece is immediately hanging
+  const attacked = isSquareAttacked(nextState.board, tr, tc, opponent, nextState.variant || "normal", nextState);
+  const defended = isSquareAttacked(nextState.board, tr, tc, color, nextState.variant || "normal", nextState);
+
+  if (attacked && !defended) {
+    score -= type === "q" ? 260 : type === "r" ? 180 : type === "b" || type === "n" ? 120 : 60;
   }
 
-  const opponentMoves = allLegalMoves(nextState, nextState.turn);
-  if (opponentMoves.length <= 4) {
-    score += 120;
-  }
+  // Middlegame skip-turn punishment should remain real
+  const skipPenalty =
+    phase === "opening" ? 120 :
+    phase === "middlegame" ? 260 :
+    phase === "late" ? 120 : 80;
+
+  score -= skipPenalty;
 
   return score;
 }
@@ -2182,30 +2419,29 @@ function filterSearchMovesForAi(state, moves) {
 
   if (resurrectionMoves.length === 0) return moves;
 
-  // Emergency: allow a few resurrection options.
-  if (inCheckNow || moves.length <= 6) {
+  if (inCheckNow) {
     return [
       ...normalMoves,
-      ...resurrectionMoves.slice(0, 3).map((x) => x.move),
+      ...resurrectionMoves.slice(0, 4).map((x) => x.move),
     ];
   }
 
-  // Opening: allow the best 1-2 resurrections.
   if (phase === "opening") {
-    const keep = resurrectionMoves.filter((x) => x.score >= 140).slice(0, 2).map((x) => x.move);
-    return [...normalMoves, ...keep];
+    return [
+      ...normalMoves,
+      ...resurrectionMoves.filter((x) => x.score >= 220).slice(0, 2).map((x) => x.move),
+    ];
   }
 
-  // Middlegame: almost never search resurrection lines unless nothing else exists.
   if (phase === "middlegame") {
-    if (normalMoves.length > 0) return normalMoves;
-    return resurrectionMoves.slice(0, 1).map((x) => x.move);
+    const strong = resurrectionMoves.filter((x) => x.score >= 260).slice(0, 2).map((x) => x.move);
+    return strong.length > 0 ? [...normalMoves, ...strong] : normalMoves;
   }
 
-  // Late / endgame: keep only best couple.
+  // late / endgame
   return [
     ...normalMoves,
-    ...resurrectionMoves.slice(0, 2).map((x) => x.move),
+    ...resurrectionMoves.slice(0, 3).map((x) => x.move),
   ];
 }
 
@@ -2928,6 +3164,7 @@ export default function PlayableChessGame() {
   const [hannibalSetup, setHannibalSetup] = useState(null);
   const [hannibalSelectedSlot, setHannibalSelectedSlot] = useState(null);
   const [worldWarSetup, setWorldWarSetup] = useState(null);
+const [campaign, setCampaign] = useState(null);
 
   const aiTimerRef = useRef(null);
   const aiSearchTokenRef = useRef(0);
@@ -2945,39 +3182,110 @@ export default function PlayableChessGame() {
   const hasPersianSide = whiteArmyType === "persian" || blackArmyType === "persian";
   const hasRomanSide = whiteArmyType === "roman" || blackArmyType === "roman";
 
-  useEffect(() => {
-    const validModes = ["pvp", "ai", "ai_setup"];
-    const validVariants = ["normal", "mongolian", "samurai", "spartan", "viking", "hannibal", "persian", "roman", "worldwar"];
-    const invalidMode = mode && !validModes.includes(mode);
-    const invalidVariant = variant !== null && !validVariants.includes(variant);
-    const stuckWithoutVariant = mode && !variant && !worldWarSetup && !hannibalSetup;
-    const invalidGame = !game || !Array.isArray(game.board) || game.board.length !== 8 || game.board.some((row) => !Array.isArray(row) || row.length !== 8);
+useEffect(() => {
+  const validModes = ["pvp", "ai", "ai_setup", "campaign"];
+  const validVariants = ["normal", "mongolian", "samurai", "spartan", "viking", "hannibal", "persian", "roman", "alexander", "worldwar"];
+  const invalidMode = mode && !validModes.includes(mode);
+  const invalidVariant = variant !== null && !validVariants.includes(variant);
+  const stuckWithoutVariant = mode && mode !== "campaign" && !variant && !worldWarSetup && !hannibalSetup;
+  const invalidGame =
+    !game ||
+    !Array.isArray(game.board) ||
+    game.board.length !== 8 ||
+    game.board.some((row) => !Array.isArray(row) || row.length !== 8);
 
-    if (invalidMode || invalidVariant || stuckWithoutVariant || invalidGame) {
-      if (aiTimerRef.current) {
-        clearTimeout(aiTimerRef.current);
-        aiTimerRef.current = null;
-      }
-      aiSearchTokenRef.current += 1;
-      setThinking(false);
-      setThinkingLabel("");
-      setMode(null);
-      setPlayerColor(null);
+  if (invalidMode || invalidVariant || stuckWithoutVariant || invalidGame) {
+    if (aiTimerRef.current) {
+      clearTimeout(aiTimerRef.current);
+      aiTimerRef.current = null;
+    }
+    aiSearchTokenRef.current += 1;
+    setThinking(false);
+    setThinkingLabel("");
+    setMode(null);
+    setPlayerColor(null);
+    setVariant(null);
+    setWorldWarSetup(null);
+    setHannibalSetup(null);
+    setHannibalSelectedSlot(null);
+    setSelectedReserve(null);
+    setLastMove(null);
+    setKatanaEffect(null);
+    setEndOverlay(null);
+    setSkipOverlay(null);
+    setResurrectionOverlay(null);
+    setPendingPromotion(null);
+    setCampaign(null);
+    clearEngineCaches();
+    setGame(createInitialState("normal"));
+  }
+}, [mode, variant, worldWarSetup, hannibalSetup, game]);
+
+useEffect(() => {
+  if (!game.gameOver) return;
+  if (!campaign) return;
+  if (!campaign.inBattle) return;
+  if (mode !== "ai") return;
+
+  const playerWon =
+    (playerColor === "w" && game.status.includes("White wins")) ||
+    (playerColor === "b" && game.status.includes("Black wins"));
+
+  const playerLost =
+    (playerColor === "w" && game.status.includes("Black wins")) ||
+    (playerColor === "b" && game.status.includes("White wins"));
+
+  if (playerWon) {
+    const completedIndex = campaign.chapterIndex;
+    const nextIndex = completedIndex + 1;
+
+    const updatedCampaign = {
+      ...campaign,
+      completed: [
+        ...new Set([
+          ...(campaign.completed || []),
+          campaign.chapters[completedIndex].id,
+        ]),
+      ],
+      chapterIndex: Math.min(nextIndex, campaign.chapters.length - 1),
+      inBattle: false,
+      activeBattleChapterId: null,
+      lastCompletedChapterIndex: completedIndex,
+    };
+
+    saveCampaignProgress(updatedCampaign);
+
+    setTimeout(() => {
+      setCampaign(updatedCampaign);
+      setMode("campaign");
       setVariant(null);
+      setPlayerColor("w");
       setWorldWarSetup(null);
       setHannibalSetup(null);
-      setHannibalSelectedSlot(null);
       setSelectedReserve(null);
-      setLastMove(null);
-      setKatanaEffect(null);
-      setEndOverlay(null);
-      setSkipOverlay(null);
-      setResurrectionOverlay(null);
       setPendingPromotion(null);
-      clearEngineCaches();
       setGame(createInitialState("normal"));
-    }
-  }, [mode, variant, worldWarSetup, hannibalSetup, game]);
+    }, 1200);
+
+    return;
+  }
+
+  if (playerLost) {
+    clearCampaignProgress();
+
+    setTimeout(() => {
+      setCampaign(null);
+      setMode(null);
+      setVariant(null);
+      setPlayerColor(null);
+      setWorldWarSetup(null);
+      setHannibalSetup(null);
+      setSelectedReserve(null);
+      setPendingPromotion(null);
+      setGame(createInitialState("normal"));
+    }, 1600);
+  }
+}, [game.gameOver, game.status, campaign, mode, playerColor]);
 
   const gameSummary = useMemo(() => {
     const legal = allLegalMoves(game);
@@ -3015,28 +3323,111 @@ export default function PlayableChessGame() {
     setThinkingLabel("");
   }
 
-  function resetGame() {
-    cancelAiThinking();
-    aiSearchTokenRef.current += 1;
-    clearEngineCaches();
+  function startFreshCampaign() {
+  cancelAiThinking();
+  clearEngineCaches();
 
-    const nextState =
-      variant === "worldwar"
-        ? createInitialState("worldwar", game.whiteArmy || "normal", game.blackArmy || "normal")
-        : createInitialState(variant || "normal");
+  const freshCampaign = {
+    chapterIndex: 0,
+    chapters: GLOBAL_CONQUEST_CHAPTERS,
+    completed: [],
+    inBattle: false,
+    activeBattleChapterId: null,
+    lastCompletedChapterIndex: -1,
+  };
 
-    setGame(nextState);
-    setLastMove(null);
-    setKatanaEffect(null);
-    setEndOverlay(null);
-    setSkipOverlay(null);
-    setResurrectionOverlay(null);
-    setSelectedReserve(null);
-    setPendingPromotion(null);
-    setHannibalSetup(null);
-    setHannibalSelectedSlot(null);
-    setWorldWarSetup(null);
-  }
+  clearCampaignProgress();
+  saveCampaignProgress(freshCampaign);
+
+  setCampaign(freshCampaign);
+  setMode("campaign");
+  setPlayerColor("w");
+  setVariant(null);
+  setWorldWarSetup(null);
+  setHannibalSetup(null);
+  setHannibalSelectedSlot(null);
+  setSelectedReserve(null);
+  setPendingPromotion(null);
+  setLastMove(null);
+  setKatanaEffect(null);
+  setEndOverlay(null);
+  setSkipOverlay(null);
+  setResurrectionOverlay(null);
+  setGame(createInitialState("normal"));
+}
+
+function continueSavedCampaign() {
+  const saved = loadCampaignProgress();
+  if (!saved) return;
+
+  cancelAiThinking();
+  clearEngineCaches();
+
+  setCampaign(saved);
+  setMode("campaign");
+  setPlayerColor("w");
+  setVariant(null);
+  setWorldWarSetup(null);
+  setHannibalSetup(null);
+  setHannibalSelectedSlot(null);
+  setSelectedReserve(null);
+  setPendingPromotion(null);
+  setLastMove(null);
+  setKatanaEffect(null);
+  setEndOverlay(null);
+  setSkipOverlay(null);
+  setResurrectionOverlay(null);
+  setGame(createInitialState("normal"));
+}
+
+function startCampaignBattle(chapter) {
+  if (!campaign) return;
+
+  const updatedCampaign = {
+    ...campaign,
+    inBattle: true,
+    activeBattleChapterId: chapter.id,
+  };
+
+  saveCampaignProgress(updatedCampaign);
+  setCampaign(updatedCampaign);
+
+  clearEngineCaches();
+  setPlayerColor(chapter.playerColor || "w");
+  setVariant(chapter.variant || "worldwar");
+  setGame(
+    createInitialState(
+      chapter.variant || "worldwar",
+      chapter.whiteArmy,
+      chapter.blackArmy
+    )
+  );
+  setMode("ai");
+}
+
+ function resetGame() {
+  cancelAiThinking();
+  aiSearchTokenRef.current += 1;
+  clearEngineCaches();
+
+  const nextState =
+    variant === "worldwar"
+      ? createInitialState("worldwar", game.whiteArmy || "normal", game.blackArmy || "normal")
+      : createInitialState(variant || "normal");
+
+  setGame(nextState);
+  setLastMove(null);
+  setKatanaEffect(null);
+  setEndOverlay(null);
+  setSkipOverlay(null);
+  setResurrectionOverlay(null);
+  setSelectedReserve(null);
+  setPendingPromotion(null);
+  setHannibalSetup(null);
+  setHannibalSelectedSlot(null);
+  setWorldWarSetup(null);
+  setCampaign(null);
+}
 
   function startGame(color, chosenMode) {
     cancelAiThinking();
@@ -3477,6 +3868,32 @@ setGame((prev) => {
       setGame((prev) => ({ ...prev, selected: null, legalMoves: [] }));
     }
   }
+function saveCampaignProgress(campaignData) {
+  try {
+    localStorage.setItem(GLOBAL_CONQUEST_SAVE_KEY, JSON.stringify(campaignData));
+  } catch (error) {
+    console.error("Failed to save campaign progress:", error);
+  }
+}
+
+function loadCampaignProgress() {
+  try {
+    const raw = localStorage.getItem(GLOBAL_CONQUEST_SAVE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (error) {
+    console.error("Failed to load campaign progress:", error);
+    return null;
+  }
+}
+
+function clearCampaignProgress() {
+  try {
+    localStorage.removeItem(GLOBAL_CONQUEST_SAVE_KEY);
+  } catch (error) {
+    console.error("Failed to clear campaign progress:", error);
+  }
+}
 
   function squareHighlighted(r, c) {
     if (selectedReserve) {
@@ -3556,11 +3973,14 @@ setGame((prev) => {
     };
   }, [game, mode, playerColor, hannibalSetup, worldWarSetup, pendingPromotion]);
 
-  if (!mode) {
+     if (!mode) {
+    const savedCampaign = loadCampaignProgress();
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-neutral-100 p-4">
         <div className="bg-white p-10 rounded-3xl shadow-xl text-center max-w-xl w-full">
           <h1 className="text-3xl font-bold mb-6">Choose Game Mode</h1>
+
           <div className="mb-6">
             <div className="text-lg font-semibold mb-2">Variant</div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 justify-center">
@@ -3572,9 +3992,11 @@ setGame((prev) => {
               <button onClick={() => setVariant("hannibal")} className={variantButtonClass("hannibal", variant === "hannibal")}>Hannibal Chess</button>
               <button onClick={() => setVariant("persian")} className={variantButtonClass("persian", variant === "persian")}>Persian Immortal Chess</button>
               <button onClick={() => setVariant("roman")} className={variantButtonClass("roman", variant === "roman")}>Roman Chess</button>
+              <button onClick={() => setVariant("alexander")} className={variantButtonClass("alexander", variant === "alexander")}>Alexander Chess</button>
               <button onClick={() => setVariant("worldwar")} className={variantButtonClass("worldwar", variant === "worldwar")}>World War</button>
             </div>
           </div>
+
           <div className="flex flex-col gap-4">
             <button
               onClick={() => {
@@ -3585,6 +4007,7 @@ setGame((prev) => {
             >
               Two Player (Control Both Sides)
             </button>
+
             <button
               onClick={() => {
                 if (!variant) return;
@@ -3595,11 +4018,129 @@ setGame((prev) => {
             >
               Play vs Computer
             </button>
+
+            <div className="mt-8 border-t pt-6">
+              <div className="text-lg font-semibold mb-3">Campaign</div>
+
+              <button
+                onClick={() => {
+                  if (savedCampaign) {
+                    continueSavedCampaign();
+                  } else {
+                    startFreshCampaign();
+                  }
+                }}
+                className={variantButtonClass("globalconquest", true)}
+              >
+                Global Conquest
+              </button>
+
+              <p className="mt-2 text-sm text-neutral-600">
+                Story campaign. Single-player only.
+              </p>
+
+              {savedCampaign && (
+                <div className="mt-4 flex flex-col gap-2">
+                  <button
+                    onClick={continueSavedCampaign}
+                    className="px-4 py-2 rounded-xl bg-neutral-900 text-white"
+                  >
+                    Continue Campaign
+                  </button>
+                  <button
+                    onClick={startFreshCampaign}
+                    className="px-4 py-2 rounded-xl bg-neutral-200 text-neutral-900"
+                  >
+                    Start New Campaign
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
     );
   }
+
+if (mode === "campaign" && campaign) {
+  const currentChapter = campaign.chapters[campaign.chapterIndex];
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-neutral-100 p-4">
+      <div className="bg-white p-8 rounded-3xl shadow-xl text-center max-w-3xl w-full">
+        <h1 className="text-3xl font-bold mb-3">Global Conquest</h1>
+        <p className="text-neutral-600 mb-6">
+          A campaign of 19 parts: 10 story scenes and 9 special battle missions.
+        </p>
+
+        <div className="rounded-2xl bg-neutral-100 p-5 text-left">
+          <div className="mt-4 text-sm text-neutral-600">
+            Progress: Chapter {campaign.chapterIndex + 1} / {campaign.chapters.length}
+          </div>
+          <div className="text-sm uppercase tracking-wide text-neutral-500 mb-2">
+            Current Chapter
+          </div>
+          <div className="text-2xl font-bold mb-2">{currentChapter.title}</div>
+          <div className="text-neutral-700">
+            {currentChapter.type === "story"
+              ? currentChapter.text
+              : `Mission: ${currentChapter.missionName} — ${variantLabel(currentChapter.whiteArmy)} vs ${variantLabel(currentChapter.blackArmy)}`}
+          </div>
+        </div>
+
+        <div className="flex justify-center gap-3 mt-6">
+          <button
+            onClick={() => {
+              cancelAiThinking();
+              setCampaign(null);
+              setMode(null);
+              setPlayerColor(null);
+              setVariant(null);
+              setWorldWarSetup(null);
+              setHannibalSetup(null);
+              setHannibalSelectedSlot(null);
+              setSelectedReserve(null);
+              setPendingPromotion(null);
+              setLastMove(null);
+              setKatanaEffect(null);
+              setEndOverlay(null);
+              setSkipOverlay(null);
+              setResurrectionOverlay(null);
+              setGame(createInitialState("normal"));
+            }}
+            className="px-5 py-3 rounded-2xl bg-neutral-200"
+          >
+            Back
+          </button>
+
+          <button
+            onClick={() => {
+              const chapter = campaign.chapters[campaign.chapterIndex];
+
+              if (chapter.type === "story") {
+                const nextIndex = campaign.chapterIndex + 1;
+                if (nextIndex < campaign.chapters.length) {
+                  const updatedCampaign = {
+                    ...campaign,
+                    chapterIndex: nextIndex,
+                  };
+                  setCampaign(updatedCampaign);
+                  saveCampaignProgress(updatedCampaign);
+                }
+                return;
+              }
+
+              startCampaignBattle(chapter);
+            }}
+            className="px-5 py-3 rounded-2xl bg-neutral-900 text-white"
+          >
+            {currentChapter.type === "story" ? "Continue" : "Start Mission"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
   if (worldWarSetup) {
     return (
@@ -3793,8 +4334,16 @@ setGame((prev) => {
             <h1 className="text-3xl font-bold">Playable Chess</h1>
             <p className="text-sm text-neutral-600">
               {mode === "ai"
-                ? `Mode: vs Computer • ${AI_NAME} • Variant: ${variant === "normal" ? "Normal" : variant === "mongolian" ? "Mongolian" : variant === "samurai" ? "Samurai" : variant === "spartan" ? "Spartan" : variant === "viking" ? "Viking" : variant === "hannibal" ? "Hannibal" : variant === "roman" ? "Roman" : variant === "worldwar" ? `World War (${variantLabel(game.whiteArmy)} vs ${variantLabel(game.blackArmy)})` : "Persian Immortal"}`
-                : `Mode: Two Player • Variant: ${variant === "normal" ? "Normal" : variant === "mongolian" ? "Mongolian" : variant === "samurai" ? "Samurai" : variant === "spartan" ? "Spartan" : variant === "viking" ? "Viking" : variant === "hannibal" ? "Hannibal" : variant === "roman" ? "Roman" : variant === "worldwar" ? `World War (${variantLabel(game.whiteArmy)} vs ${variantLabel(game.blackArmy)})` : "Persian Immortal"}`}
+  ? `Mode: vs Computer • ${AI_NAME} • Variant: ${
+      variant === "worldwar"
+        ? `World War (${variantLabel(game.whiteArmy)} vs ${variantLabel(game.blackArmy)})`
+        : variantLabelName(variant)
+    }`
+  : `Mode: Two Player • Variant: ${
+      variant === "worldwar"
+        ? `World War (${variantLabel(game.whiteArmy)} vs ${variantLabel(game.blackArmy)})`
+        : variantLabelName(variant)
+    }`}
             </p>
           </div>
           <div className="flex gap-2 shrink-0">
