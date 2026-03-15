@@ -18,17 +18,17 @@ const PIECES = {
 
 const AI_NAME = "Strong AI";
 const ANALYSIS_ROOT_MOVES = 3;
-const QUIESCENCE_DEPTH = 1;
+const QUIESCENCE_DEPTH = 2;
 const AI_MOVE_DELAY_MS = 20;
 const MATE_SCORE = 1000000;
 
-const STRONG_AI_BASE_DEPTH = 3;
-const STRONG_AI_ENDGAME_DEPTH = 4;
-const STRONG_AI_MAX_ROOT = 8;
+const STRONG_AI_BASE_DEPTH = 4;
+const STRONG_AI_ENDGAME_DEPTH = 5;
+const STRONG_AI_MAX_ROOT = 14;
 
-const TT_MAX_SIZE = 12000;
-const LEGAL_CACHE_MAX = 6000;
-const EVAL_CACHE_MAX = 6000;
+const TT_MAX_SIZE = 30000;
+const LEGAL_CACHE_MAX = 16000;
+const EVAL_CACHE_MAX = 16000;
 
 const GLOBAL_TT = new Map();
 const LEGAL_CACHE = new Map();
@@ -1837,27 +1837,37 @@ function getUnsafeCapturePenalty(state, move) {
 }
 
 function getRepetitionPenalty(state, move) {
-  const currentEval = evaluateBoard(state);
-  const mover = state.turn;
-
-  const moverAhead =
-    (mover === "w" && currentEval > 120) ||
-    (mover === "b" && currentEval < -120);
-
-  const moverBehind =
-    (mover === "w" && currentEval < -120) ||
-    (mover === "b" && currentEval > 120);
+  if (!state?.moveKeys || state.moveKeys.length < 6) return 0;
 
   const result = applyMoveToState(state, move, "q");
   const nextState = buildChildState(state, result);
   const nextHash = hashState(nextState);
 
-  const repeats = state.positionCounts?.[nextHash] || 0;
-  if (repeats <= 0) return 0;
+  let repeats = 0;
 
-  if (moverAhead) return repeats >= 2 ? 500 : 180;
-  if (moverBehind) return repeats >= 2 ? 100 : 30;
-  return repeats >= 2 ? 260 : 90;
+  const historyStates = [];
+  let replayState = createInitialState(state.variant || "normal", state.whiteArmy || "normal", state.blackArmy || "normal");
+  historyStates.push(hashState(replayState));
+
+  for (let i = 0; i < state.moveKeys.length; i++) {
+    const key = state.moveKeys[i];
+    const legal = allLegalMoves(replayState);
+    const matchedMove = legal.find((m) => moveToKey(m) === key);
+    if (!matchedMove) break;
+
+    const replayResult = applyMoveToState(replayState, matchedMove, "q");
+    replayState = buildChildState(replayState, replayResult);
+    historyStates.push(hashState(replayState));
+  }
+
+  for (const pastHash of historyStates) {
+    if (pastHash === nextHash) repeats += 1;
+  }
+
+  if (repeats >= 2) return 500;
+  if (repeats >= 1) return 140;
+
+  return 0;
 }
 
 function countAttackersOnSquare(state, row, col, attackerColor) {
@@ -2245,6 +2255,49 @@ function estimatePositionComplexity(state, moves) {
   return variantComplexity + materialComplexity + branchingComplexity;
 }
 
+function getSamuraiSacrificeScore(state, move) {
+  if (!move?.sacrifice || !move.from) return -999999;
+
+  const piece = state.board[move.from[0]][move.from[1]];
+  if (!piece) return -999999;
+
+  const type = getType(piece);
+
+  // Never encourage king sacrifice
+  if (type === "k") return -999999;
+
+  const currentEval = evaluateBoard(state);
+  const mover = state.turn;
+
+  let score = 0;
+
+  // Sacrificing low-value pieces is less bad
+  score -= PIECE_VALUES[type] || 0;
+
+  // If behind, allow more desperation sacrifices
+  const behind =
+    (mover === "w" && currentEval < -150) ||
+    (mover === "b" && currentEval > 150);
+
+  if (behind) score += 120;
+
+  // If same-type catastrophe opportunities exist after sacrifice,
+  // give a small bonus
+  const result = applyMoveToState(state, move, "q");
+  const nextState = buildChildState(state, result);
+
+  const sameTypeThreats = countSameTypeCaptureThreats(nextState, mover);
+  score += sameTypeThreats * 80;
+
+  const checkingMoves = countCheckingMoves(nextState, mover);
+  score += checkingMoves * 40;
+
+  const bestCapture = getBestCaptureValueAvailable(nextState, mover);
+  score += Math.min(bestCapture, 500) * 0.2;
+
+  return score;
+}
+
 function getMoveOrderingScore(state, move) {
   if (move.resurrect) return scorePersianResurrectionMove(state, move);
   if (move.sacrifice) return getSamuraiSacrificeScore(state, move);
@@ -2325,13 +2378,23 @@ function quiescence(state, alpha, beta, maximizingPlayer, depthLeft = QUIESCENCE
 
   const tacticalMoves = allLegalMoves(state, state.turn).filter((move) => {
     if (move.resurrect || move.sacrifice) return false;
+
     const target = state.board[move.to[0]][move.to[1]];
-    return !!target || !!move.enPassant;
+    const isCapture = !!target || !!move.enPassant;
+    const isPromotion =
+      move.from &&
+      state.board[move.from[0]][move.from[1]] &&
+      getType(state.board[move.from[0]][move.from[1]]) === "p" &&
+      (move.to[0] === 0 || move.to[0] === 7);
+
+    const isCheck = moveGivesCheck(state, move);
+
+    return isCapture || isPromotion || isCheck;
   });
 
   if (tacticalMoves.length === 0) return standPat;
 
-  const ordered = orderMoves(state, tacticalMoves);
+  const ordered = orderMoves(state, tacticalMoves).slice(0, 12);
 
   if (maximizingPlayer) {
     let value = standPat;
@@ -2383,7 +2446,11 @@ function filterSamuraiSearchMoves(state, moves) {
 function minimax(state, depth, alpha, beta, maximizingPlayer, tt = GLOBAL_TT) {
   const alphaOrig = alpha;
   const betaOrig = beta;
-  const key = tt ? `${hashState(state)}|${depth}|${maximizingPlayer ? "M" : "m"}` : null;
+
+  const inCheckNow = isInCheck(state.board, state.turn, state.variant || "normal", state);
+  const effectiveDepth = inCheckNow ? depth + 1 : depth;
+
+  const key = tt ? `${hashState(state)}|${effectiveDepth}|${maximizingPlayer ? "M" : "m"}` : null;
 
   if (tt && key && tt.has(key)) {
     const cached = tt.get(key);
@@ -2394,14 +2461,13 @@ function minimax(state, depth, alpha, beta, maximizingPlayer, tt = GLOBAL_TT) {
   }
 
   const legal = allLegalMoves(state, state.turn);
-  const inCheck = isInCheck(state.board, state.turn, state.variant || "normal", state);
 
-    if (depth === 0 || legal.length === 0) {
+  if (effectiveDepth === 0 || legal.length === 0) {
     let terminalValue;
 
     if (legal.length === 0) {
-      if (inCheck) {
-        terminalValue = maximizingPlayer ? -MATE_SCORE - depth : MATE_SCORE + depth;
+      if (inCheckNow) {
+        terminalValue = maximizingPlayer ? -MATE_SCORE - effectiveDepth : MATE_SCORE + effectiveDepth;
       } else {
         terminalValue = 0;
       }
@@ -2416,7 +2482,7 @@ function minimax(state, depth, alpha, beta, maximizingPlayer, tt = GLOBAL_TT) {
     return terminalValue;
   }
 
-    const searchMoves = filterSamuraiSearchMoves(state, filterSearchMovesForAi(state, legal));
+  const searchMoves = filterSamuraiSearchMoves(state, filterSearchMovesForAi(state, legal));
   const orderedMoves = orderMoves(state, searchMoves);
 
   let bestValue;
@@ -2425,7 +2491,8 @@ function minimax(state, depth, alpha, beta, maximizingPlayer, tt = GLOBAL_TT) {
     bestValue = -Infinity;
     for (const move of orderedMoves) {
       const result = applyMoveToState(state, move, "q");
-      const evalScore = minimax(buildChildState(state, result), depth - 1, alpha, beta, false, tt);
+      const child = buildChildState(state, result);
+      const evalScore = minimax(child, effectiveDepth - 1, alpha, beta, false, tt);
       bestValue = Math.max(bestValue, evalScore);
       alpha = Math.max(alpha, evalScore);
       if (beta <= alpha) break;
@@ -2434,7 +2501,8 @@ function minimax(state, depth, alpha, beta, maximizingPlayer, tt = GLOBAL_TT) {
     bestValue = Infinity;
     for (const move of orderedMoves) {
       const result = applyMoveToState(state, move, "q");
-      const evalScore = minimax(buildChildState(state, result), depth - 1, alpha, beta, true, tt);
+      const child = buildChildState(state, result);
+      const evalScore = minimax(child, effectiveDepth - 1, alpha, beta, true, tt);
       bestValue = Math.min(bestValue, evalScore);
       beta = Math.min(beta, evalScore);
       if (beta <= alpha) break;
@@ -2639,39 +2707,37 @@ function getStrongAiSearchConfig(state, moves) {
   const persianTurn = isPersianSide(state, state.turn);
   const samuraiTurn = variantForColor(state, state.turn) === "samurai";
 
-  let depth;
-  let rootLimit;
+  let depth = STRONG_AI_BASE_DEPTH;
+  let rootLimit = STRONG_AI_MAX_ROOT;
 
-  if (endgameish && moves.length <= 16) {
-    depth = 4;
-    rootLimit = 8;
-  } else if (complexity >= 6) {
-    depth = 3;
-    rootLimit = 6;
-  } else if (complexity >= 4) {
-    depth = 3;
-    rootLimit = 8;
-  } else {
-    depth = 3;
-    rootLimit = 8;
+  if (endgameish) {
+    depth = STRONG_AI_ENDGAME_DEPTH;
+    rootLimit = Math.min(STRONG_AI_MAX_ROOT, 18);
   }
 
-  if (currentlyInCheck) depth = Math.min(depth + 1, 4);
+  if (complexity >= 6) {
+    depth = Math.max(3, depth - 1);
+    rootLimit = Math.min(rootLimit, 8);
+  } else if (complexity >= 4) {
+    rootLimit = Math.min(rootLimit, 10);
+  }
+
+  if (currentlyInCheck) {
+    depth = Math.min(depth + 1, STRONG_AI_ENDGAME_DEPTH + 1);
+    rootLimit = Math.min(Math.max(rootLimit, 10), 16);
+  }
 
   if (samuraiTurn) {
-    rootLimit = Math.min(Math.max(rootLimit, 8), 10);
+    rootLimit = Math.min(Math.max(rootLimit, 10), 16);
   }
 
   if (persianTurn) {
     if (phase === "opening") {
-      depth = Math.min(depth, 3);
-      rootLimit = Math.min(rootLimit, 6);
+      rootLimit = Math.min(rootLimit, 10);
     } else if (phase === "middlegame") {
-      depth = Math.min(depth, 3);
-      rootLimit = Math.min(rootLimit, 5);
+      rootLimit = Math.min(rootLimit, 8);
     } else {
-      depth = Math.min(depth, 4);
-      rootLimit = Math.min(rootLimit, 7);
+      rootLimit = Math.min(rootLimit, 12);
     }
   }
 
@@ -2684,7 +2750,7 @@ async function chooseStrongComputerMoveAsync(state, isCancelled = () => false) {
   if (legalMoves.length === 1) return legalMoves[0];
 
   const aiColor = state.turn;
-  const deadline = Date.now() + 900;
+  const deadline = Date.now() + (isEndgame(state) ? 1800 : 1400);
 
   let orderedMoves = orderMoves(
     state,
@@ -2761,6 +2827,11 @@ async function chooseStrongComputerMoveAsync(state, isCancelled = () => false) {
       const repetitionPenalty = getRepetitionPenalty(state, move);
       if (repetitionPenalty > 0) {
         score += aiColor === "w" ? -repetitionPenalty : repetitionPenalty;
+      }
+
+      const nonProgressCheckPenalty = getNonProgressCheckPenalty(state, move);
+      if (nonProgressCheckPenalty > 0) {
+        score += aiColor === "w" ? -nonProgressCheckPenalty : nonProgressCheckPenalty;
       }
 
       const samuraiSwing = samuraiCatastrophePenalty(state, move);
