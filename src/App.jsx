@@ -18,17 +18,17 @@ const PIECES = {
 
 const AI_NAME = "Strong AI";
 const ANALYSIS_ROOT_MOVES = 3;
-const QUIESCENCE_DEPTH = 2;
+const QUIESCENCE_DEPTH = 1;
 const AI_MOVE_DELAY_MS = 20;
 const MATE_SCORE = 1000000;
 
-const STRONG_AI_BASE_DEPTH = 4;
-const STRONG_AI_ENDGAME_DEPTH = 5;
-const STRONG_AI_MAX_ROOT = 14;
+const STRONG_AI_BASE_DEPTH = 3;
+const STRONG_AI_ENDGAME_DEPTH = 4;
+const STRONG_AI_MAX_ROOT = 8;
 
-const TT_MAX_SIZE = 30000;
-const LEGAL_CACHE_MAX = 16000;
-const EVAL_CACHE_MAX = 16000;
+const TT_MAX_SIZE = 12000;
+const LEGAL_CACHE_MAX = 6000;
+const EVAL_CACHE_MAX = 6000;
 
 const GLOBAL_TT = new Map();
 const LEGAL_CACHE = new Map();
@@ -275,16 +275,57 @@ function isSamuraiCatastropheCapture(state, move) {
 }
 
 function samuraiCatastrophePenalty(state, move) {
+  if (!hasSamuraiSideInPosition(state)) return { penalty: 0, bonus: 0 };
+  if (!move || move.resurrect) return { penalty: 0, bonus: 0 };
+
   const moverColor = state.turn;
   const opponentColor = other(moverColor);
   const moverArmy = variantForColor(state, moverColor);
   const opponentArmy = variantForColor(state, opponentColor);
 
-  const result = applyMoveToState(state, move, "q");
-  const nextState = buildChildState(state, result);
-
-  let penalty = 0;
   let bonus = 0;
+  let penalty = 0;
+
+  if (isSamuraiCatastropheCapture(state, move)) {
+    bonus += 2600;
+
+    const movingPiece = move.from ? state.board[move.from[0]][move.from[1]] : null;
+    const movingType = movingPiece ? getType(movingPiece) : null;
+
+    if (moverArmy === "mongolian" && opponentArmy === "samurai" && movingType === "n") {
+      bonus += 3200;
+    }
+  }
+
+  if (!move.from || move.sacrifice) return { penalty, bonus };
+
+  const movingPiece = state.board[move.from[0]][move.from[1]];
+  if (!movingPiece) return { penalty, bonus };
+
+  const movingType = getType(movingPiece);
+
+  if (
+    moverArmy === "mongolian" &&
+    opponentArmy === "samurai" &&
+    movingType === "n" &&
+    squareIsGuardedBySamuraiKnight(state, move.to[0], move.to[1], opponentColor)
+  ) {
+    penalty = Math.max(penalty, 900000);
+  }
+
+  if (movingType !== "p") {
+    const knightThreat =
+      opponentArmy === "samurai" &&
+      movingType === "n" &&
+      squareIsGuardedBySamuraiKnight(state, move.to[0], move.to[1], opponentColor);
+
+    if (knightThreat) {
+      penalty = Math.max(penalty, moverArmy === "mongolian" ? 900000 : 4200);
+    }
+  }
+
+  return { penalty, bonus };
+}
 
 function getPieceOnSquare(board, square) {
   if (!square) return null;
@@ -344,72 +385,9 @@ function getBestCaptureValueAvailable(state, color) {
   return best;
 }
 
-function getSamuraiSacrificeScore(state, move) {
-  if (!move?.sacrifice || !move.from) return -999999;
-
-  const piece = state.board[move.from[0]][move.from[1]];
-  if (!piece) return -999999;
-
-  const color = getColor(piece);
-  const enemy = other(color);
-  const type = getType(piece);
-
-  if (type === "k") return -999999;
-
-  const pieceValue = PIECE_VALUES[type] || 0;
-
-  const beforeSameTypeThreats = countSameTypeCaptureThreats(state, color);
-  const beforeEnemySameTypeThreats = countSameTypeCaptureThreats(state, enemy);
-  const beforeChecks = countCheckingMoves(state, color);
-  const beforeEnemyChecks = countCheckingMoves(state, enemy);
-  const beforeBestCapture = getBestCaptureValueAvailable(state, color);
-
-  const result = applyMoveToState(state, move, "q");
-  const nextState = buildChildState(state, result);
-
-  const afterSameTypeThreats = countSameTypeCaptureThreats(nextState, color);
-  const afterEnemySameTypeThreats = countSameTypeCaptureThreats(nextState, enemy);
-  const afterChecks = countCheckingMoves(nextState, color);
-  const afterEnemyChecks = countCheckingMoves(nextState, enemy);
-  const afterBestCapture = getBestCaptureValueAvailable(nextState, color);
-
-  let score = -pieceValue;
-
-  // Opening a catastrophic same-type capture is huge in Samurai.
-  score += (afterSameTypeThreats - beforeSameTypeThreats) * 950;
-
-  // Removing enemy catastrophic threats is also huge.
-  score += (beforeEnemySameTypeThreats - afterEnemySameTypeThreats) * 850;
-
-  // Sacrifice-discovered checks matter a lot.
-  score += (afterChecks - beforeChecks) * 260;
-
-  // If sacrifice reduces enemy checking resources, reward it.
-  score += (beforeEnemyChecks - afterEnemyChecks) * 180;
-
-  // If sacrifice opens stronger captures, reward that too.
-  score += Math.max(0, afterBestCapture - beforeBestCapture) * 0.65;
-
-  // If after sacrificing, the side is no longer in check, reward heavily.
-  const wasInCheck = isInCheck(state.board, color, state.variant || "normal", state);
-  const nowInCheck = isInCheck(nextState.board, color, nextState.variant || "normal", nextState);
-
-  if (wasInCheck && !nowInCheck) score += 1400;
-
-  // If sacrifice gives immediate check, strong bonus.
-  const nextMoves = allLegalMoves(nextState, color);
-  const canCheckImmediately = nextMoves.some((m) => moveGivesCheck(nextState, m));
-  if (canCheckImmediately) score += 220;
-
-  // If sacrifice creates an immediate winning move next, very big bonus.
-  const createsMateThreat = nextMoves.some((m) => isImmediateWinningMove(nextState, m));
-  if (createsMateThreat) score += 4000;
-
-  // If enemy has immediate win after this, punish hard.
-  if (moveAllowsOpponentImmediateWin(state, move)) score -= 900000;
-
-  return score;
-}
+function getSamuraiCatastropheImpact(state, move, nextState, moverArmy, opponentArmy, moverColor, opponentColor) {
+  let bonus = 0;
+  let penalty = 0;
 
   if (isSamuraiCatastropheCapture(state, move)) {
     const movingPiece = move.from ? state.board[move.from[0]][move.from[1]] : null;
@@ -455,7 +433,7 @@ function squareIsGuardedBySamuraiKnight(state, row, col, defenderColor) {
   const defenderArmy = variantForColor(state, defenderColor);
   if (defenderArmy !== "samurai") return false;
 
-  const knightSteps = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+  const knightSteps = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
 
   for (const [dr, dc] of knightSteps) {
     const r = row + dr;
@@ -491,6 +469,10 @@ function pieceFontStyle() {
 function variantLabel(name) {
   if (name === "persian") return "Persian Immortal";
   return variantLabelName(name);
+}
+
+function hasSamuraiSideInPosition(state) {
+  return variantForColor(state, "w") === "samurai" || variantForColor(state, "b") === "samurai";
 }
 
 function variantLabelName(name) {
@@ -810,7 +792,7 @@ function getMissingPieces(board, reserve = { w: [], b: [] }, whiteArmy = "normal
 }
 
 function createInitialState(variant = "normal", whiteArmy = "normal", blackArmy = "normal") {
-  return {
+  const baseState = {
     board: initialBoard(variant, whiteArmy, blackArmy),
     turn: "w",
     selected: null,
@@ -829,6 +811,16 @@ function createInitialState(variant = "normal", whiteArmy = "normal", blackArmy 
     reserve: { w: [], b: [] },
     skipNext: { w: 0, b: 0 },
     skippedTurns: [],
+    positionHistory: [],
+    positionCounts: {},
+  };
+
+  const startHash = hashState(baseState);
+
+  return {
+    ...baseState,
+    positionHistory: [startHash],
+    positionCounts: { [startHash]: 1 },
   };
 }
 
@@ -1829,52 +1821,43 @@ function getUnsafeCapturePenalty(state, move) {
   const result = applyMoveToState(state, move, "q");
   const nextState = buildChildState(state, result);
 
-  const smallestRecaptor = getSmallestAttackerValue(nextState, move.to[0], move.to[1], opponentColor);
-  if (smallestRecaptor === null) return 0;
+  const attacked = isSquareAttacked(
+    nextState.board,
+    move.to[0],
+    move.to[1],
+    opponentColor,
+    nextState.variant || "normal",
+    nextState
+  );
 
-  const netLoss = attackerValue - victimValue;
+  if (!attacked) return 0;
+  if (victimValue >= attackerValue) return 0;
 
-  if (netLoss <= 0) return 0;
-
-  if (smallestRecaptor <= attackerValue) {
-    return netLoss + 80;
-  }
-
-  return 0;
+  return Math.max(0, attackerValue - victimValue) + 60;
 }
 
 function getRepetitionPenalty(state, move) {
-  if (!state?.moveKeys || state.moveKeys.length < 6) return 0;
+  const currentEval = evaluateBoard(state);
+  const mover = state.turn;
+
+  const moverAhead =
+    (mover === "w" && currentEval > 120) ||
+    (mover === "b" && currentEval < -120);
+
+  const moverBehind =
+    (mover === "w" && currentEval < -120) ||
+    (mover === "b" && currentEval > 120);
 
   const result = applyMoveToState(state, move, "q");
   const nextState = buildChildState(state, result);
   const nextHash = hashState(nextState);
 
-  let repeats = 0;
+  const repeats = state.positionCounts?.[nextHash] || 0;
+  if (repeats <= 0) return 0;
 
-  const historyStates = [];
-  let replayState = createInitialState(state.variant || "normal", state.whiteArmy || "normal", state.blackArmy || "normal");
-  historyStates.push(hashState(replayState));
-
-  for (let i = 0; i < state.moveKeys.length; i++) {
-    const key = state.moveKeys[i];
-    const legal = allLegalMoves(replayState);
-    const matchedMove = legal.find((m) => moveToKey(m) === key);
-    if (!matchedMove) break;
-
-    const replayResult = applyMoveToState(replayState, matchedMove, "q");
-    replayState = buildChildState(replayState, replayResult);
-    historyStates.push(hashState(replayState));
-  }
-
-  for (const pastHash of historyStates) {
-    if (pastHash === nextHash) repeats += 1;
-  }
-
-  if (repeats >= 2) return 500;
-  if (repeats >= 1) return 140;
-
-  return 0;
+  if (moverAhead) return repeats >= 2 ? 500 : 180;
+  if (moverBehind) return repeats >= 2 ? 100 : 30;
+  return repeats >= 2 ? 260 : 90;
 }
 
 function countAttackersOnSquare(state, row, col, attackerColor) {
@@ -1913,36 +1896,26 @@ function getUnsafePlacementPenalty(state, move) {
   const result = applyMoveToState(state, move, "q");
   const nextState = buildChildState(state, result);
 
-  const attackers = countAttackersOnSquare(nextState, move.to[0], move.to[1], opponentColor);
-  if (attackers === 0) return 0;
+  const attacked = isSquareAttacked(
+    nextState.board,
+    move.to[0],
+    move.to[1],
+    opponentColor,
+    nextState.variant || "normal",
+    nextState
+  );
 
-  const defenders = countAttackersOnSquare(nextState, move.to[0], move.to[1], movingColor);
-  const pieceValue = PIECE_VALUES[movingType] || 0;
-
-  let penalty = 0;
-
-  if (attackers > defenders) {
-    if (movingType === "q") penalty += 260;
-    else if (movingType === "r") penalty += 140;
-    else if (movingType === "b" || movingType === "n") penalty += 90;
-    else if (movingType === "p") penalty += 25;
-  }
-
-  if (attackers >= 1 && defenders === 0) {
-    if (movingType === "q") penalty += 220;
-    else if (movingType === "r") penalty += 120;
-    else if (movingType === "b" || movingType === "n") penalty += 70;
-    else if (movingType === "p") penalty += 20;
-  }
+  if (!attacked) return 0;
 
   const target = state.board[move.to[0]][move.to[1]];
   const isCapture = !!target || !!move.enPassant;
 
-  if (!isCapture && pieceValue >= 500 && attackers > 0) {
-    penalty += 80;
-  }
+  if (movingType === "q") return isCapture ? 120 : 220;
+  if (movingType === "r") return isCapture ? 70 : 120;
+  if (movingType === "b" || movingType === "n") return isCapture ? 45 : 75;
+  if (movingType === "p") return isCapture ? 10 : 20;
 
-  return penalty;
+  return 0;
 }
 
 function evaluateBoard(state) {
@@ -2273,9 +2246,8 @@ function estimatePositionComplexity(state, moves) {
 }
 
 function getMoveOrderingScore(state, move) {
-   if (move.resurrect) return scorePersianResurrectionMove(state, move);
-    if (move.sacrifice) return getSamuraiSacrificeScore(state, move);
-
+  if (move.resurrect) return scorePersianResurrectionMove(state, move);
+  if (move.sacrifice) return getSamuraiSacrificeScore(state, move);
 
   let score = 0;
 
@@ -2289,6 +2261,13 @@ function getMoveOrderingScore(state, move) {
     const victimValue = PIECE_VALUES[getType(target)] || 0;
     const attackerValue = PIECE_VALUES[movingType] || 0;
     score += 1200 + victimValue * 12 - attackerValue;
+  }
+
+  if (move.enPassant) score += 1000;
+  if (move.castle) score += 100;
+
+  if (movingType === "p" && (move.to[0] === 0 || move.to[0] === 7)) {
+    score += 1200;
   }
 
   if (isSamuraiCatastropheCapture(state, move)) {
@@ -2310,26 +2289,18 @@ function getMoveOrderingScore(state, move) {
     movingPiece &&
     variantForColor(state, movingColor) === "mongolian" &&
     variantForColor(state, opponentColor) === "samurai" &&
-    movingType === "n"
+    movingType === "n" &&
+    squareIsGuardedBySamuraiKnight(state, move.to[0], move.to[1], opponentColor)
   ) {
-    if (squareIsGuardedBySamuraiKnight(state, move.to[0], move.to[1], opponentColor)) {
-      score -= 12000;
-    }
-  }
-
-  if (move.enPassant) score += 1000;
-  if (move.castle) score += 100;
-
-  if (movingType === "p" && (move.to[0] === 0 || move.to[0] === 7)) {
-    score += 1200;
+    score -= 12000;
   }
 
   const [tr, tc] = move.to;
   const distFromCenter = Math.abs(3.5 - tr) + Math.abs(3.5 - tc);
   score += Math.round((7 - distFromCenter) * 6);
 
-  if (moveGivesCheck(state, move)) {
-    score += 60;
+  if (target || move.enPassant || move.castle) {
+    if (moveGivesCheck(state, move)) score += 60;
   }
 
   return score;
@@ -2352,7 +2323,7 @@ function quiescence(state, alpha, beta, maximizingPlayer, depthLeft = QUIESCENCE
 
   if (depthLeft <= 0) return standPat;
 
-      const tacticalMoves = orderMoves(state, allLegalMoves(state, state.turn)).filter((move) => {
+  const tacticalMoves = allLegalMoves(state, state.turn).filter((move) => {
     if (move.resurrect || move.sacrifice) return false;
     const target = state.board[move.to[0]][move.to[1]];
     return !!target || !!move.enPassant;
@@ -2360,9 +2331,11 @@ function quiescence(state, alpha, beta, maximizingPlayer, depthLeft = QUIESCENCE
 
   if (tacticalMoves.length === 0) return standPat;
 
+  const ordered = orderMoves(state, tacticalMoves);
+
   if (maximizingPlayer) {
     let value = standPat;
-    for (const move of tacticalMoves) {
+    for (const move of ordered) {
       const result = applyMoveToState(state, move, "q");
       const score = quiescence(buildChildState(state, result), alpha, beta, false, depthLeft - 1);
       value = Math.max(value, score);
@@ -2373,7 +2346,7 @@ function quiescence(state, alpha, beta, maximizingPlayer, depthLeft = QUIESCENCE
   }
 
   let value = standPat;
-  for (const move of tacticalMoves) {
+  for (const move of ordered) {
     const result = applyMoveToState(state, move, "q");
     const score = quiescence(buildChildState(state, result), alpha, beta, true, depthLeft - 1);
     value = Math.min(value, score);
@@ -2381,6 +2354,30 @@ function quiescence(state, alpha, beta, maximizingPlayer, depthLeft = QUIESCENCE
     if (alpha >= beta) break;
   }
   return value;
+}
+
+function filterSamuraiSearchMoves(state, moves) {
+  if (variantForColor(state, state.turn) !== "samurai") return moves;
+
+  const normalMoves = [];
+  const sacrifices = [];
+
+  for (const move of moves) {
+    if (move.sacrifice) {
+      sacrifices.push({ move, score: getSamuraiSacrificeScore(state, move) });
+    } else {
+      normalMoves.push(move);
+    }
+  }
+
+  sacrifices.sort((a, b) => b.score - a.score);
+
+  const strongSacrifices = sacrifices
+    .filter((x) => x.score > -120)
+    .slice(0, 2)
+    .map((x) => x.move);
+
+  return [...normalMoves, ...strongSacrifices];
 }
 
 function minimax(state, depth, alpha, beta, maximizingPlayer, tt = GLOBAL_TT) {
@@ -2423,30 +2420,6 @@ function minimax(state, depth, alpha, beta, maximizingPlayer, tt = GLOBAL_TT) {
   const orderedMoves = orderMoves(state, searchMoves);
 
   let bestValue;
-
-function filterSamuraiSearchMoves(state, moves) {
-  if (variantForColor(state, state.turn) !== "samurai") return moves;
-
-  const normalMoves = [];
-  const sacrifices = [];
-
-  for (const move of moves) {
-    if (move.sacrifice) {
-      sacrifices.push({ move, score: getSamuraiSacrificeScore(state, move) });
-    } else {
-      normalMoves.push(move);
-    }
-  }
-
-  sacrifices.sort((a, b) => b.score - a.score);
-
-  const strongSacrifices = sacrifices
-    .filter((x) => x.score > -120)
-    .slice(0, 2)
-    .map((x) => x.move);
-
-  return [...normalMoves, ...strongSacrifices];
-}
 
   if (maximizingPlayer) {
     bestValue = -Infinity;
@@ -2604,6 +2577,8 @@ function moveAllowsOpponentImmediateWin(state, move) {
 function getImmediateLossPenalty(state, move) {
   if (moveAllowsOpponentImmediateWin(state, move)) return 900000;
 
+  if (!hasSamuraiSideInPosition(state)) return 0;
+
   const moverColor = state.turn;
   const opponentColor = other(moverColor);
   const moverArmy = variantForColor(state, moverColor);
@@ -2639,6 +2614,23 @@ function getImmediateLossPenalty(state, move) {
   return 0;
 }
 
+function getNonProgressCheckPenalty(state, move) {
+  if (!moveGivesCheck(state, move)) return 0;
+
+  const currentEval = evaluateBoard(state);
+  const mover = state.turn;
+  const moverAhead =
+    (mover === "w" && currentEval > 150) ||
+    (mover === "b" && currentEval < -150);
+
+  if (!moverAhead) return 0;
+
+  const target = state.board[move.to[0]][move.to[1]];
+  const isTactical = !!target || !!move.enPassant || !!move.castle || !!move.promotion;
+
+  return isTactical ? 0 : 35;
+}
+
 function getStrongAiSearchConfig(state, moves) {
   const complexity = estimatePositionComplexity(state, moves);
   const endgameish = totalNonPawnMaterial(state) <= 2200;
@@ -2650,67 +2642,38 @@ function getStrongAiSearchConfig(state, moves) {
   let depth;
   let rootLimit;
 
-  if (endgameish && moves.length <= 20) {
-    depth = STRONG_AI_ENDGAME_DEPTH;
-    rootLimit = 12;
+  if (endgameish && moves.length <= 16) {
+    depth = 4;
+    rootLimit = 8;
   } else if (complexity >= 6) {
     depth = 3;
-    rootLimit = 8;
+    rootLimit = 6;
   } else if (complexity >= 4) {
-    depth = 4;
-    rootLimit = 10;
+    depth = 3;
+    rootLimit = 8;
   } else {
-    depth = STRONG_AI_BASE_DEPTH;
-    rootLimit = STRONG_AI_MAX_ROOT;
+    depth = 3;
+    rootLimit = 8;
   }
 
-  if (currentlyInCheck) depth += 1;
+  if (currentlyInCheck) depth = Math.min(depth + 1, 4);
 
   if (samuraiTurn) {
-    rootLimit = Math.min(Math.max(rootLimit, 10), 14);
+    rootLimit = Math.min(Math.max(rootLimit, 8), 10);
   }
 
   if (persianTurn) {
     if (phase === "opening") {
-      depth = Math.min(depth, 4);
-      rootLimit = Math.min(rootLimit, 8);
-    } else if (phase === "middlegame") {
       depth = Math.min(depth, 3);
       rootLimit = Math.min(rootLimit, 6);
+    } else if (phase === "middlegame") {
+      depth = Math.min(depth, 3);
+      rootLimit = Math.min(rootLimit, 5);
     } else {
       depth = Math.min(depth, 4);
-      rootLimit = Math.min(rootLimit, 8);
-    }
-
-    if (currentlyInCheck) {
-      depth = Math.min(depth + 1, 5);
-      rootLimit = Math.min(rootLimit + 1, 9);
+      rootLimit = Math.min(rootLimit, 7);
     }
   }
-
-  return { depth, rootLimit };
-}
-
-  if (currentlyInCheck) depth += 1;
-
-  // Persian is uniquely branchy because of resurrection.
-  // Tighten search a bit so it stays responsive.
-  if (persianTurn) {
-    if (phase === "opening") {
-      depth = Math.min(depth, 4);
-      rootLimit = Math.min(rootLimit, 8);
-    } else if (phase === "middlegame") {
-      depth = Math.min(depth, 3);
-      rootLimit = Math.min(rootLimit, 6);
-    } else {
-      depth = Math.min(depth, 4);
-      rootLimit = Math.min(rootLimit, 8);
-    }
-
-    if (currentlyInCheck) {
-      depth = Math.min(depth + 1, 5);
-      rootLimit = Math.min(rootLimit + 1, 9);
-    }
 
   return { depth, rootLimit };
 }
@@ -2721,12 +2684,14 @@ async function chooseStrongComputerMoveAsync(state, isCancelled = () => false) {
   if (legalMoves.length === 1) return legalMoves[0];
 
   const aiColor = state.turn;
-     let orderedMoves = orderMoves(
+  const deadline = Date.now() + 900;
+
+  let orderedMoves = orderMoves(
     state,
     filterSamuraiSearchMoves(state, filterSearchMovesForAi(state, legalMoves))
   );
 
-    if (isNormalLikeGame(state)) {
+  if (isNormalLikeGame(state)) {
     const currentKeys = state.moveKeys || [];
     const matchingLines = OPENING_BOOK.filter((opening) => {
       if (opening.moves.length <= currentKeys.length) return false;
@@ -2754,33 +2719,31 @@ async function chooseStrongComputerMoveAsync(state, isCancelled = () => false) {
 
   const { depth: targetDepth, rootLimit } = getStrongAiSearchConfig(state, orderedMoves);
   let rootMoves = orderedMoves.slice(0, Math.min(rootLimit, orderedMoves.length));
-
   let bestMove = rootMoves[0];
   const tt = GLOBAL_TT;
 
   for (let currentDepth = 2; currentDepth <= targetDepth; currentDepth++) {
-    if (isCancelled()) return bestMove;
+    if (isCancelled() || Date.now() >= deadline) return bestMove;
 
     const scored = [];
 
     for (let i = 0; i < rootMoves.length; i++) {
-      if (isCancelled()) return bestMove;
+      if (isCancelled() || Date.now() >= deadline) return bestMove;
 
       const move = rootMoves[i];
       const result = applyMoveToState(state, move, "q");
       const nextState = buildChildState(state, result);
 
-      const checkExtension = moveGivesCheck(state, move) ? 1 : 0;
       let score = minimax(
         nextState,
-        currentDepth - 1 + checkExtension,
+        currentDepth - 1,
         -Infinity,
         Infinity,
         aiColor === "b",
         tt
       );
 
-                  const immediateLossPenalty = getImmediateLossPenalty(state, move);
+      const immediateLossPenalty = getImmediateLossPenalty(state, move);
       if (immediateLossPenalty > 0) {
         score += aiColor === "w" ? -immediateLossPenalty : immediateLossPenalty;
       }
@@ -2808,17 +2771,18 @@ async function chooseStrongComputerMoveAsync(state, isCancelled = () => false) {
         score += aiColor === "w" ? samuraiSwing.bonus : -samuraiSwing.bonus;
       }
 
-            if (move.sacrifice) {
+      if (move.sacrifice) {
         const sacrificeScore = getSamuraiSacrificeScore(state, move);
         score += aiColor === "w" ? sacrificeScore : -sacrificeScore;
       }
 
-      if (moveGivesCheck(state, move)) {
-        score += aiColor === "w" ? 35 : -35;
+      const target = state.board[move.to[0]][move.to[1]];
+      if ((target || move.enPassant) && moveGivesCheck(state, move)) {
+        score += aiColor === "w" ? 25 : -25;
       }
 
       if (move.resurrect) {
-        score += aiColor === "w" ? -80 : 80;
+        score += aiColor === "w" ? -60 : 60;
       }
 
       const movingPiece = move.from ? state.board[move.from[0]][move.from[1]] : null;
@@ -2835,8 +2799,8 @@ async function chooseStrongComputerMoveAsync(state, isCancelled = () => false) {
             score += aiColor === "w" ? -15000 : 15000;
           }
 
-          const target = state.board[move.to[0]][move.to[1]];
-          if (target && getType(target) === "n" && getColor(target) === opponentColor) {
+          const targetPiece = state.board[move.to[0]][move.to[1]];
+          if (targetPiece && getType(targetPiece) === "n" && getColor(targetPiece) === opponentColor) {
             score += aiColor === "w" ? 6000 : -6000;
           }
         }
@@ -2844,7 +2808,7 @@ async function chooseStrongComputerMoveAsync(state, isCancelled = () => false) {
 
       scored.push({ move, score });
 
-      if (i < rootMoves.length - 1) {
+      if ((i & 1) === 1) {
         await yieldToUi();
       }
     }
@@ -3109,29 +3073,38 @@ export default function PlayableChessGame() {
       status = `${nextGameBase.turn === "w" ? "White" : "Black"} to move — check.`;
     }
 
-    setGame((prev) => ({
-      ...nextGameBase,
-      selected: null,
-      legalMoves: [],
-      status,
-      gameOver,
-      moveHistory: notation ? [...prev.moveHistory, notation] : prev.moveHistory,
-      moveKeys: move ? [...(prev.moveKeys || []), moveToKey(move)] : (prev.moveKeys || []),
-      moveInsights: insight ? [...(prev.moveInsights || []), insight] : (prev.moveInsights || []),
-      moveSides: move
-        ? [
-            ...(prev.moveSides || []),
-            move.resurrect
-              ? getColor(move.piece)
-              : getColor(nextGameBase.board[move.to[0]][move.to[1]]) ||
-                getColor(prev.board?.[move.from?.[0]]?.[move.from?.[1]]) ||
-                prev.turn,
-          ]
-        : (prev.moveSides || []),
-      reserve: nextGameBase.reserve || prev.reserve,
-      skipNext: nextGameBase.skipNext || prev.skipNext,
-      skippedTurns: skippedTurnsNow,
-    }));
+setGame((prev) => {
+  const nextHash = hashState(nextGameBase);
+
+  return {
+    ...nextGameBase,
+    selected: null,
+    legalMoves: [],
+    status,
+    gameOver,
+    moveHistory: notation ? [...prev.moveHistory, notation] : prev.moveHistory,
+    moveKeys: move ? [...(prev.moveKeys || []), moveToKey(move)] : (prev.moveKeys || []),
+    moveInsights: insight ? [...(prev.moveInsights || []), insight] : (prev.moveInsights || []),
+    moveSides: move
+      ? [
+          ...(prev.moveSides || []),
+          move.resurrect
+            ? getColor(move.piece)
+            : getColor(nextGameBase.board[move.to[0]][move.to[1]]) ||
+              getColor(prev.board?.[move.from?.[0]]?.[move.from?.[1]]) ||
+              prev.turn,
+        ]
+      : (prev.moveSides || []),
+    reserve: nextGameBase.reserve || prev.reserve,
+    skipNext: nextGameBase.skipNext || prev.skipNext,
+    skippedTurns: skippedTurnsNow,
+    positionHistory: [...(prev.positionHistory || []), nextHash],
+    positionCounts: {
+      ...(prev.positionCounts || {}),
+      [nextHash]: ((prev.positionCounts || {})[nextHash] || 0) + 1,
+    },
+  };
+});
 
     setSelectedReserve(null);
     setHannibalSetup(null);
