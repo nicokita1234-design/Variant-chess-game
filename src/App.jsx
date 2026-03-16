@@ -103,23 +103,82 @@ If the Alexander King is captured or checkmated, that side loses.`,
 };
 
 const GLOBAL_CONQUEST_CHAPTERS = [
-  {
-    id: 1,
-    type: "story",
-    title: "The Crown",
-    scenes: [
-      { kind: "dialogue", speaker: "Lady Knight", text: "Happy Birthday, my liege. I hope you had a lovely rest last night. How is it, to wake up and find yourself King?" },
-      { kind: "dialogue", speaker: "Lady Knight", text: "I am sure it feels glorious. It was the station you dreamed of, was it not? Also destined..." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Anyway, your father's dying words were to wish you a happy birthday." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "As the new King, I am sure your goal is the same as your father's. To be a great, wise, and noble king." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Therefore your knights are ready to invade and massacre foreign territories at your moment's notice!" },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Oh, sorry, my liege. Perhaps before we look upon global conquest, we must first draw our attention to local matters as well..." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Your brother has raised a revolution, and his army is marching against you." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "This is the perfect moment to show your genius talent as a great King. Let us get rid of that vestigial pest, my lord!" },
-      { kind: "map", title: "Europe", text: "A local conflict begins in Europe." },
-      { kind: "dialogue", speaker: "Brother", text: "I challenge you to a duel, brother. It is I who shall be King. Do not worry. By the rules of chess, I will spare your life." },
-    ],
-  },
+ {
+  id: 1,
+  type: "story",
+  title: "The Crown",
+  scenes: [
+    {
+      kind: "dialogue",
+      speaker: "Lady Knight",
+      portrait: "ladyKnight",
+      background: "throneRoom",
+      text: "Happy Birthday, my liege. I hope you had a lovely rest last night. How is it, to wake up and find yourself King?"
+    },
+    {
+      kind: "dialogue",
+      speaker: "Lady Knight",
+      portrait: "ladyKnight",
+      background: "throneRoom",
+      text: "I am sure it feels glorious. It was the station you dreamed of, was it not? Also destined..."
+    },
+    {
+      kind: "dialogue",
+      speaker: "Lady Knight",
+      portrait: "ladyKnight",
+      background: "throneRoom",
+      text: "Anyway, your father's dying words were to wish you a happy birthday."
+    },
+    {
+      kind: "dialogue",
+      speaker: "Lady Knight",
+      portrait: "ladyKnight",
+      background: "throneRoom",
+      text: "As the new King, I am sure your goal is the same as your father's. To be a great, wise, and noble king."
+    },
+    {
+      kind: "dialogue",
+      speaker: "Lady Knight",
+      portrait: "ladyKnight",
+      background: "throneRoom",
+      text: "Therefore your knights are ready to invade and massacre foreign territories at your moment's notice!"
+    },
+    {
+      kind: "dialogue",
+      speaker: "Lady Knight",
+      portrait: "ladyKnight",
+      background: "throneRoom",
+      text: "Oh, sorry, my liege. Perhaps before we look upon global conquest, we must first draw our attention to local matters as well..."
+    },
+    {
+      kind: "dialogue",
+      speaker: "Lady Knight",
+      portrait: "ladyKnight",
+      background: "throneRoom",
+      text: "Your brother has raised a revolution, and his army is marching against you."
+    },
+    {
+      kind: "dialogue",
+      speaker: "Lady Knight",
+      portrait: "ladyKnight",
+      background: "throneRoom",
+      text: "This is the perfect moment to show your genius talent as a great King. Let us get rid of that vestigial pest, my lord!"
+    },
+    {
+      kind: "map",
+      title: "Europe",
+      background: "worldMap",
+      text: "A local conflict begins in Europe."
+    },
+    {
+      kind: "dialogue",
+      speaker: "Brother",
+      portrait: "brother",
+      background: "battlefieldDawn",
+      text: "I challenge you to a duel, brother. It is I who shall be King. Do not worry. By the rules of chess, I will spare your life."
+    }
+  ]
+},
   {
     id: 2,
     type: "battle",
@@ -4610,43 +4669,57 @@ if (mode === "campaign" && campaign) {
       );
     }
 
+    const backgroundClass =
+      scene.background === "throneRoom"
+        ? "bg-gradient-to-b from-red-950 via-neutral-900 to-black"
+        : scene.background === "battlefieldDawn"
+        ? "bg-gradient-to-b from-orange-900 via-red-950 to-black"
+        : scene.background === "worldMap"
+        ? "bg-gradient-to-br from-sky-900 via-blue-800 to-indigo-950"
+        : "bg-gradient-to-b from-neutral-800 via-neutral-900 to-black";
+
     return (
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-neutral-800 via-neutral-900 to-black shadow-2xl min-h-[520px] flex flex-col justify-between">
+      <div
+        className={`relative overflow-hidden rounded-3xl ${backgroundClass} shadow-2xl min-h-[520px] flex flex-col justify-between`}
+      >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_45%)]" />
 
-        <div className="relative flex-1 flex items-center justify-center p-8">
-          <div className="w-full h-full rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center">
+        <div className="relative flex-1 grid md:grid-cols-[240px_1fr] gap-6 items-center p-8">
+          <div className="h-[320px] rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center">
             <div className="text-center px-6">
               <div className="text-xs uppercase tracking-[0.3em] text-neutral-300 mb-3">
-                Story Scene
+                Portrait
               </div>
-              <div className="text-2xl md:text-3xl font-bold text-white">
-                {scene.speaker || "Narrator"}
+              <div className="text-2xl font-bold text-white">
+                {scene.portrait || "Narrator"}
               </div>
               <div className="mt-4 text-sm text-neutral-400">
-                Portrait / character art can go here later
+                PNG art goes here later
               </div>
+            </div>
+          </div>
+
+          <div className="rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-sm p-8">
+            <div className="text-xs uppercase tracking-[0.3em] text-neutral-300 mb-3">
+              Story Scene
+            </div>
+            <div className="text-3xl md:text-4xl font-bold text-white">
+              {scene.speaker || "Narrator"}
+            </div>
+            <div className="mt-6 text-lg leading-8 text-neutral-100 min-h-[180px]">
+              {scene.text}
             </div>
           </div>
         </div>
 
         <div className="relative border-t border-white/10 bg-black/65 backdrop-blur-md p-6 md:p-7">
-          <div className="mb-3">
-            <div className="inline-block rounded-xl bg-amber-200 px-4 py-2 text-sm font-bold text-neutral-900 shadow">
-              {scene.speaker || "Narrator"}
-            </div>
-          </div>
-          <div className="text-left text-lg leading-8 text-neutral-100 min-h-[120px]">
-            {scene.text}
-          </div>
-          <div className="mt-4 text-right text-xs uppercase tracking-[0.2em] text-neutral-400">
-            Click continue
+          <div className="mt-1 text-right text-xs uppercase tracking-[0.2em] text-neutral-400">
+            Click Next
           </div>
         </div>
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-neutral-950 p-4 md:p-6">
       <div className="mx-auto max-w-5xl">
