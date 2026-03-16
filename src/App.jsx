@@ -106,8 +106,19 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   {
     id: 1,
     type: "story",
-    title: "Story 1",
-    text: "Global Conquest begins. Your campaign opens with a standard clash: normal chess against normal chess.",
+    title: "The Crown",
+    scenes: [
+      { kind: "dialogue", speaker: "Lady Knight", text: "Happy Birthday, my liege. I hope you had a lovely rest last night. How is it, to wake up and find yourself King?" },
+      { kind: "dialogue", speaker: "Lady Knight", text: "I am sure it feels glorious. It was the station you dreamed of, was it not? Also destined..." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Anyway, your father's dying words were to wish you a happy birthday." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "As the new King, I am sure your goal is the same as your father's. To be a great, wise, and noble king." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Therefore your knights are ready to invade and massacre foreign territories at your moment's notice!" },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Oh, sorry, my liege. Perhaps before we look upon global conquest, we must first draw our attention to local matters as well..." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Your brother has raised a revolution, and his army is marching against you." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "This is the perfect moment to show your genius talent as a great King. Let us get rid of that vestigial pest, my lord!" },
+      { kind: "map", title: "Europe", text: "A local conflict begins in Europe." },
+      { kind: "dialogue", speaker: "Brother", text: "I challenge you to a duel, brother. It is I who shall be King. Do not worry. By the rules of chess, I will spare your life." },
+    ],
   },
   {
     id: 2,
@@ -123,8 +134,20 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   {
     id: 3,
     type: "story",
-    title: "Story 2",
-    text: "Victory brings your first advance. The next enemy waiting ahead fights under Viking rules.",
+    title: "The Northern Raiders",
+    scenes: [
+      { kind: "dialogue", speaker: "Lady Knight", text: "You did it! As God wished, it was your destiny and right to be the ruler of this country. And soon, the entire world." },
+      { kind: "dialogue", speaker: "Brother", text: "It is my loss. You are the true King and protagonist. Is it true that you aim for the world, brother? That will be difficult, but with your strength it might be possible." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Of course it is! This is our King we are talking about. And with his indomitable noble army before him, no harm will ever reach our liege." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "Lady Knight! It is an emergency! The Vikings have invaded our land!" },
+      { kind: "dialogue", speaker: "Lady Knight", text: "What? Then we must prepare. But our current soldiers are tired from the previous battle." },
+      { kind: "dialogue", speaker: "Brother", text: "I swear my loyalty to you. I will even volunteer to raise your son while you go on this journey as King. Use my army. Combined with yours, you should have enough forces to fight the Vikings. May you achieve global conquest." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Wonderful. With this, let us face the world and tell them that the land of origin of chess is superior above all other nations." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "Actually, chess originated in i..." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "To the beach!" },
+      { kind: "map", title: "Northern Europe", text: "The march moves north toward the beaches of Europe." },
+      { kind: "dialogue", speaker: "Viking Commander", text: "So you are the new King. I knew it was about time your father passed. With this we will once and for all get rid of you all!" },
+    ],
   },
   {
     id: 4,
@@ -140,8 +163,21 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   {
     id: 5,
     type: "story",
-    title: "Story 3",
-    text: "With the Vikings defeated, you march onward. A Mongolian force now blocks your path.",
+    title: "Riders of the Steppe",
+    scenes: [
+      { kind: "dialogue", speaker: "Viking Commander", text: "It is our loss. I did not know the son of that old wretched man would be such a fighter. From now on, you are our chief!" },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Wonderful. We have toppled our first foreign foe. We are almost there in achieving global conquest." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "But for that, we must extend beyond our territory. We will have to go by sea. We do not have the shipbuilding capacity." },
+      { kind: "dialogue", speaker: "Viking Commander", text: "Shucks, I guess we will just have to swim. Do you all know anybody famous for shipmaking? Maybe we can recruit their help?" },
+      { kind: "dialogue", speaker: "Viking Commander", text: "Hahaha, I am kidding. Hop on, chief. We will take you to the mainland. But be aware. As soon as we land, we will have to face them." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Who?" },
+      { kind: "dialogue", speaker: "Viking Commander", text: "We are the rulers of the sea, but they are the rulers of land. Vast empires stretching farther than our entire territory at sea." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "The Mongols live near where this boat is heading. So we should be careful." },
+      { kind: "map", title: "Asia", text: "The campaign leaves Europe and heads deep into Asia." },
+      { kind: "dialogue", speaker: "Genghis Khan", text: "It has been a while since anyone dared invade our land. Least of all those wet seafarers. You have no place on land. Why even challenge us?" },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Global conquest is ours. You are just a stepping stone." },
+      { kind: "dialogue", speaker: "Genghis Khan", text: "Global conquest? Such a boring goal. Who has that much time to care about expansion and conquest? But I will crush you." },
+    ],
   },
   {
     id: 6,
@@ -157,8 +193,17 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   {
     id: 7,
     type: "story",
-    title: "Story 4",
-    text: "The Mongolian army becomes your next weapon. But now the Samurai await.",
+    title: "The Divine Wind",
+    scenes: [
+      { kind: "dialogue", speaker: "Genghis Khan", text: "To feel such defeat! Finally a fight that felt joyous. It has been generations since I met a man like you." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Congratulations. With this we can travel the land freely and challenge all other rivals." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "I have heard tales from merchants. Down south there is land where the world's biggest and most formidable armies have been locked in centuries of battle. If someone is to achieve global conquest, it is a path we cannot avoid." },
+      { kind: "dialogue", speaker: "Genghis Khan", text: "Before that, would you avenge me with your might? There is an island east from here. On scrolls they are weak, pathetic, and without resources. But when we last invaded, a typhoon destroyed our army. They called it the divine wind." },
+      { kind: "dialogue", speaker: "Genghis Khan", text: "Such a way of winning is shameful. They denied us our right to noble battle, and wrongfully took pride in it. If you wish to challenge the south, prove that you have the strength. Show that you will not lose your army to mere misfortune." },
+      { kind: "map", title: "Japan", text: "The route shifts east from mainland Asia to Japan." },
+      { kind: "dialogue", speaker: "Shogun", text: "They have returned yet again. No? Their leader is different from the last. Yet the outcome will be the same." },
+      { kind: "dialogue", speaker: "Shogun", text: "Ready the army. Ready the typhoon. For honor we fight. Destroy them all, or disembowel!" },
+    ],
   },
   {
     id: 8,
@@ -174,8 +219,18 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   {
     id: 9,
     type: "story",
-    title: "Story 5",
-    text: "After surviving the Samurai, you press forward. The Spartans now stand in your way.",
+    title: "The Land of War",
+    scenes: [
+      { kind: "dialogue", speaker: "Shogun 2", text: "Congratulations, our King, for the noble battle. Unfortunately, we are unable to lend you that previous army, as they have all decided it was too shameful to live. Yet fear not. The rest of this land are willing to assist you. You are going south, yes?" },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Yes. We will finally challenge the major leagues. Thank you for your assistance. Let us all head over and see what the land of war is truly like." },
+      { kind: "map", title: "Greece", text: "The campaign moves west toward Greece." },
+      { kind: "dialogue", speaker: "Shogun 2", text: "I see. So these are the people of war. Like us, they are true warriors." },
+      { kind: "dialogue", speaker: "Spartan", text: "Those of the east have no right upon this sacred land. Head back now." },
+      { kind: "dialogue", speaker: "Spartan", text: "Especially those cowardly enough to rely on cavalry and archery." },
+      { kind: "dialogue", speaker: "Shogun 2", text: "I heard tales that your army of three hundred were able to defeat an army of ten thousand immortal demons. That is truly proof of heroism. Yet if I must say... seven of us would have sufficed." },
+      { kind: "dialogue", speaker: "Shogun 2", text: "We the samurai will cut through your head, shield-bearer." },
+      { kind: "dialogue", speaker: "Spartan", text: "We are SPARTANS!" },
+    ],
   },
   {
     id: 10,
@@ -191,8 +246,35 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   {
     id: 11,
     type: "story",
-    title: "Story 6",
-    text: "The Spartan line finally breaks. Beyond them waits the Persian Immortals.",
+    title: "The Center of the World",
+    scenes: [
+      { kind: "dialogue", speaker: "Spartan", text: "It is our loss." },
+      { kind: "dialogue", speaker: "Shogun 2", text: "No, you did not lose in spirit, for you fought well. I have never seen such valiant warriors." },
+      { kind: "dialogue", speaker: "Spartan", text: "Your words mean much, brother of the east." },
+      { kind: "dialogue", speaker: "Shogun 2", text: "So do yours, my southwestern brethren." },
+      { kind: "dialogue", speaker: "Spartan", text: "Anyway, my King. Your genius in tactics is something to behold. Perhaps you may even match him..." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Him?" },
+      { kind: "dialogue", speaker: "Squire Boy", text: "I believe we have some company." },
+      { kind: "dialogue", speaker: "Spartan", text: "They are back yet again!" },
+      { kind: "dialogue", speaker: "Persian Immortals", text: "So it is true, that a new army has come, uniting the north and the far east. Now you have come to the center of the world." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Who are they?" },
+      { kind: "dialogue", speaker: "Spartan", text: "The Immortals. No matter how many we defeat, their numbers never decrease for long. One of the candidates in the race for global conquest." },
+      { kind: "dialogue", speaker: "Persian Immortals", text: "Unfortunately, we are no longer in competition." },
+      { kind: "dialogue", speaker: "Spartan", text: "What do you mean?" },
+      { kind: "dialogue", speaker: "???", text: "It means they are my vassals now." },
+      { kind: "dialogue", speaker: "Hannibal", text: "Good evening." },
+      { kind: "dialogue", speaker: "Spartan", text: "Hannibal. It is him, the man whose genius rivals, no, surpasses yours." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "How dare you say that to your King!" },
+      { kind: "dialogue", speaker: "Hannibal", text: "Hahaha, spare him some slack, miss. For he tells the truth. As I am one battle away from achieving global conquest." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "What?" },
+      { kind: "dialogue", speaker: "Hannibal", text: "One last battle with the Romans, and upon victory I will be crowned the greatest general in history." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "You have never even fought us and claim global conquest?" },
+      { kind: "dialogue", speaker: "Hannibal", text: "I am sorry, who are you? I know no such knight, nor the name of your lord." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Grrr... Our King demands a duel! We shall prove our might!" },
+      { kind: "dialogue", speaker: "Hannibal", text: "I decline. I have no time to deal with mere insects, as I have my battle with the Romans. But... I suppose I can send someone your size to play with you." },
+      { kind: "dialogue", speaker: "Persian Immortals", text: "Understood. We shall call our army and strike at dawn." },
+      { kind: "dialogue", speaker: "Spartan", text: "Then this time for sure, our new King will finish you off!" },
+    ],
   },
   {
     id: 12,
@@ -208,8 +290,33 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   {
     id: 13,
     type: "story",
-    title: "Story 7",
-    text: "You now command the Persian Immortals. Rome rises ahead, determined to stop your conquest.",
+    title: "The Crown Is Taken",
+    scenes: [
+      { kind: "dialogue", speaker: "Persian Immortals", text: "......" },
+      { kind: "dialogue", speaker: "Spartan", text: "This time, for sure, we must kill all of them, my lord. Do not show them mercy. By tomorrow they will return with full strength." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "My liege, if I may, your strength comes from your ability to recruit the armies you defeat. If you are to achieve global conquest, and defeat Rome or even Hannibal, it will be best to acquire as many forces as possible." },
+      { kind: "dialogue", speaker: "Spartan", text: "No. You do not understand. You must not spare the Immortals." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "My liege, I have received news. The Roman army of eighty thousand have fallen." },
+      { kind: "dialogue", speaker: "Spartan", text: "!" },
+      { kind: "dialogue", speaker: "Persian Immortals", text: "!" },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Hannibal Barca has been crowned as the greatest general in history and was given the crown of global conquest..." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "Were we too late?..." },
+      { kind: "dialogue", speaker: "Persian Immortals", text: "Take us." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "What?" },
+      { kind: "dialogue", speaker: "Persian Immortals", text: "Hannibal was a genius, but he was no king. With the crown of global conquest, all middle powers of the world who could not compete must now pick his side or fall." },
+      { kind: "dialogue", speaker: "Persian Immortals", text: "Yet if we must choose a king, we shall believe in you." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Then it is decided. We will topple Hannibal and achieve global conquest!" },
+      { kind: "dialogue", speaker: "Persian Immortals", text: "Not yet. You will lose. Capture the Romans first. Although defeated, the Romans will continue to fight until the last man." },
+      { kind: "dialogue", speaker: "Persian Immortals", text: "You are a king who can unite people. You will need the Romans to challenge Hannibal in his full might." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Then we take Rome." },
+      { kind: "dialogue", speaker: "Persian Immortals", text: "Although our army has been destroyed, a new legion is coming here by tomorrow. You will have fresh troops to lead into victory." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Thank you." },
+      { kind: "map", title: "Rome", text: "The road turns west toward Rome." },
+      { kind: "dialogue", speaker: "Roman General (Left)", text: "One after the other!" },
+      { kind: "dialogue", speaker: "Roman General (Right)", text: "They are foolish if they believe they can capture Rome even at its weakest!" },
+      { kind: "dialogue", speaker: "Roman General (Left)", text: "We shall crush this new King!" },
+      { kind: "dialogue", speaker: "Roman General (Right)", text: "And then take Hannibal's head!" },
+    ],
   },
   {
     id: 14,
@@ -225,8 +332,15 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   {
     id: 15,
     type: "story",
-    title: "Story 8",
-    text: "Rome has fallen. Only Hannibal remains between you and total conquest.",
+    title: "The War for the World",
+    scenes: [
+      { kind: "dialogue", speaker: "Roman Generals", text: "We accept. Not our defeat, but to lend our strength. From today on you are an honorary citizen of Rome, and in this time of crisis we elect you as Dictator." },
+      { kind: "dialogue", speaker: "Roman Generals", text: "Lead all of the world, and let us once and for all defeat the General Hannibal of Carthage." },
+      { kind: "map", title: "Carthage", text: "The coalition marches from Rome to Carthage." },
+      { kind: "dialogue", speaker: "Hannibal", text: "It is a shame I still do not know your name. For even I can agree that you too are a great general. Someone who could perhaps challenge my seat as the conqueror of the globe." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "This is it. This decides the greatest general of today." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Let us win." },
+    ],
   },
   {
     id: 16,
@@ -242,8 +356,40 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   {
     id: 17,
     type: "story",
-    title: "Story 9",
-    text: "Hannibal is defeated. But the true final ruler now reveals himself: Alexander.",
+    title: "The Greatest",
+    scenes: [
+      { kind: "dialogue", speaker: "Lady Knight", text: "We won.... We actually won! My liege! You did it my liege! The crown of Global Conquest is yours." },
+      { kind: "dialogue", speaker: "Hannibal", text: "Hahaha.... Impossible. My glory, my legacy, after all this time and this? It comes to this! No, I refuse! You may break my bones and salt my lands, and I will never give you the title of the greatest general in history!" },
+      { kind: "dialogue", speaker: "Lady Knight", text: "What claims do you have? You have lost. The greatest alive has been decided." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "Yes. Today will be recorded in history as the day the greatest general alive has been crowned and the glory of global conquest has once again been achieved after hundreds of years." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Therefore, give up Hannibal. And recognize the King who stands in front of you." },
+      { kind: "dialogue", speaker: "Hannibal", text: "Mmm. Grrr.... I have no army and lost all of the men who will follow me. Even I am aware of my limits. I shall be known as the second greatest general in history...." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Hurray! He surrendered! With this the battle is complete. And Hannibal, before we leave, from your mouth. If you are the second greatest general, then who is the first?" },
+      { kind: "dialogue", speaker: "Squire Boy", text: "I believe that question is yet to be answered." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "What? Why? It is obviously our King." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "Yes, of today. Hannibal, if our liege did not exist, but you still lost, who do you think would be ranked as the third greatest general throughout history?" },
+      { kind: "dialogue", speaker: "Hannibal", text: "Pyrrhus of Epirus." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "And the second?" },
+      { kind: "dialogue", speaker: "Hannibal", text: "I have conquered Rome, therefore myself." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "Then who would be the greatest in history?" },
+      { kind: "dialogue", speaker: "Hannibal", text: ".....that would be.... Alexander of Macedon." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Where are you going with this hypothetical?" },
+      { kind: "dialogue", speaker: "Squire Boy", text: "I am saying that our liege is the greatest today, but whether he was the greatest of all time is still in debate." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Shut your tongue, squire, or I will cut it off. How dare you speak like that to our King." },
+      { kind: "dialogue", speaker: "Hannibal", text: "Though it is the truth. Both Alexander and you deserve the title of great. Shame that we were not born in his generation. For if we were here centuries earlier, then I would have given everything to have one battle against him." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "Yes, but it is impossible to go back in time." },
+      { kind: "dialogue", speaker: "Hannibal", text: "A shame." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "But forward is not an issue." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "What are you talking about?" },
+      { kind: "dialogue", speaker: "Squire Boy", text: "This is a story about a friend of mine. At twenty he inherited his father's kingdom. Although nervous, he labored his best for excellence. He gathered the world's smartest, and slowly amassed the world's strongest." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "Within a few short years he had conquered his land and the neighboring lands. From the Mediterranean to Egypt, from Europe to India. He became the first in history to achieve global conquest." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "But by his thirties, he had no other rivals. He became desperate to seek out the strong, anyone who could rival him. Yet none from his time could stand a chance. He fell into a great depression and became ill." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "It was then that he met a witch. Together they realized that though none could rival him today, in the future, centuries from then, perhaps there will be a time where someone of such strength will be born yet again." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "And fortune found this era, where not one but two great generals exist at the same moment. Hannibal the Great, and you." },
+      { kind: "dialogue", speaker: "Squire Boy", text: "Across time Alexander and his undefeated army have through sorcery forced our memories and souls to reincarnate in this era!" },
+      { kind: "dialogue", speaker: "Squire Boy", text: "It is I! I am Alexander!" },
+      { kind: "dialogue", speaker: "Squire Boy", text: "Hannibal! And you! Let us see who deserves the title of 'the great' once and for all!" },
+    ],
   },
   {
     id: 18,
@@ -259,14 +405,26 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   {
     id: 19,
     type: "story",
-    title: "Story 10",
-    text: "The campaign is over. The final enemy has fallen, and your conquest is complete.",
+    title: "King the Great",
+    scenes: [
+      { kind: "dialogue", speaker: "Alexander", text: "Ahahahaha, finally I may die in battle. Hannibal and you, my King. The world shall know that you together stand above Alexander the Great." },
+      { kind: "dialogue", speaker: "Alexander", text: "Let the world know your station. With this it seems both my army and myself have run out of time. Thank you for giving us a true battle to end our history." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "...... he is gone. Turned to ashes....." },
+      { kind: "dialogue", speaker: "Hannibal the Great", text: "He traveled across time. He must have sacrificed his existence for just one battle... and I am afraid I would have done the same." },
+      { kind: "dialogue", speaker: "Hannibal the Great", text: "And you, Great King, how was your journey? Have you enjoyed this journey of global conquest? Are you satisfied, or do you wish for more battles?" },
+      { kind: "dialogue", speaker: "Hannibal the Great", text: "You fight just like Alexander the Great. That is perhaps your army now. Anyway, I will be taking my leave. That battle has revitalized my ambition for conquest. I will return to challenge you." },
+      { kind: "dialogue", speaker: "Hannibal the Great", text: "Until then, guard the throne of global conquest close to your heart, Great King. I will be back much sooner than four hundred years." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "Haha... some people just cannot live without this thrill..." },
+      { kind: "dialogue", speaker: "Lady Knight", text: "My liege, or I guess my King the Great. Congratulations on your conquest, and thank you. It was a joy to serve you." },
+    ],
   },
   {
     id: 20,
     type: "story",
-    title: "End Credits",
-    text: "Thanks for playing Global Conquest.",
+    title: "Credits",
+    scenes: [
+      { kind: "ending", endingType: "credits", text: "GLOBAL CONQUEST ACHIEVED\n\nYou have become\n\nTHE GREAT" },
+    ],
   },
 ];
 
@@ -3314,6 +3472,7 @@ export default function PlayableChessGame() {
   const [hannibalSelectedSlot, setHannibalSelectedSlot] = useState(null);
   const [worldWarSetup, setWorldWarSetup] = useState(null);
 const [campaign, setCampaign] = useState(null);
+const [campaignSceneIndex, setCampaignSceneIndex] = useState(0);
 
   const aiTimerRef = useRef(null);
   const aiSearchTokenRef = useRef(0);
@@ -3322,6 +3481,12 @@ const [campaign, setCampaign] = useState(null);
   useEffect(() => {
     coachModeRef.current = coachMode;
   }, [coachMode]);
+
+useEffect(() => {
+  if (mode === "campaign" && campaign) {
+    setCampaignSceneIndex(0);
+  }
+}, [mode, campaign?.chapterIndex]);
 
   const boardFacing = playerColor || "w";
   const whiteArmyType = variantForColor(game, "w");
@@ -4349,79 +4514,268 @@ function clearCampaignProgress() {
 
 if (mode === "campaign" && campaign) {
   const currentChapter = campaign.chapters[campaign.chapterIndex];
+  const chapterScenes = currentChapter.scenes || [];
+  const currentScene =
+    currentChapter.type === "story" ? chapterScenes[campaignSceneIndex] : null;
+  const isLastScene =
+    currentChapter.type === "story" &&
+    campaignSceneIndex >= chapterScenes.length - 1;
+
+  function leaveCampaignToMenu() {
+    cancelAiThinking();
+    setCampaign(null);
+    setCampaignSceneIndex(0);
+    setMode(null);
+    setPlayerColor(null);
+    setVariant(null);
+    setWorldWarSetup(null);
+    setHannibalSetup(null);
+    setHannibalSelectedSlot(null);
+    setSelectedReserve(null);
+    setPendingPromotion(null);
+    setLastMove(null);
+    setKatanaEffect(null);
+    setEndOverlay(null);
+    setSkipOverlay(null);
+    setResurrectionOverlay(null);
+    setGame(createInitialState("normal"));
+  }
+
+  function goToNextCampaignChapter() {
+    const nextIndex = campaign.chapterIndex + 1;
+    if (nextIndex < campaign.chapters.length) {
+      const updatedCampaign = {
+        ...campaign,
+        chapterIndex: nextIndex,
+      };
+      setCampaign(updatedCampaign);
+      setCampaignSceneIndex(0);
+      saveCampaignProgress(updatedCampaign);
+    }
+  }
+
+  function renderStoryScene(scene) {
+    if (!scene) {
+      return (
+        <div className="rounded-3xl bg-white/90 p-8 shadow-xl">
+          <div className="text-neutral-700">This story scene is empty.</div>
+        </div>
+      );
+    }
+
+    if (scene.kind === "map") {
+      return (
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-900 via-blue-800 to-indigo-950 p-8 text-white shadow-2xl min-h-[420px] flex flex-col justify-between">
+          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_20%_20%,white_0%,transparent_35%),radial-gradient(circle_at_80%_30%,white_0%,transparent_25%),radial-gradient(circle_at_50%_80%,white_0%,transparent_30%)]" />
+
+          <div className="relative">
+            <div className="text-xs uppercase tracking-[0.25em] text-sky-200 mb-2">
+              World Map Transition
+            </div>
+            <h2 className="text-4xl font-black tracking-wide">
+              {scene.title || "Map"}
+            </h2>
+          </div>
+
+          <div className="relative flex-1 flex items-center justify-center">
+            <div className="relative w-full max-w-2xl h-[220px] rounded-3xl border border-white/20 bg-white/10 backdrop-blur-sm overflow-hidden">
+              <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.02)_100%)]" />
+              <div className="absolute left-[10%] top-[55%] h-4 w-4 rounded-full bg-yellow-300 shadow-[0_0_18px_rgba(253,224,71,0.9)] animate-pulse" />
+              <div className="absolute left-[20%] top-[48%] w-[55%] h-1 rounded-full bg-gradient-to-r from-yellow-300 via-orange-300 to-red-300 animate-pulse" />
+              <div className="absolute right-[15%] top-[35%] h-5 w-5 rounded-full bg-red-400 shadow-[0_0_18px_rgba(248,113,113,0.9)] animate-bounce" />
+              <div className="absolute left-[18%] top-[50%] text-3xl animate-[ping_2.2s_infinite]">
+                ✦
+              </div>
+            </div>
+          </div>
+
+          <div className="relative rounded-2xl bg-black/25 border border-white/10 p-5 text-left">
+            <div className="text-lg font-semibold text-sky-100 mb-2">
+              {scene.title || "Travel"}
+            </div>
+            <div className="text-sky-50/95 leading-7">{scene.text}</div>
+          </div>
+        </div>
+      );
+    }
+
+    if (scene.kind === "ending") {
+      return (
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-800 p-10 text-center text-white shadow-2xl min-h-[420px] flex flex-col items-center justify-center">
+          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,white_0%,transparent_55%)]" />
+          <div className="relative whitespace-pre-line text-4xl md:text-5xl font-black tracking-wide leading-tight">
+            {scene.text}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-neutral-800 via-neutral-900 to-black shadow-2xl min-h-[520px] flex flex-col justify-between">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_45%)]" />
+
+        <div className="relative flex-1 flex items-center justify-center p-8">
+          <div className="w-full h-full rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center">
+            <div className="text-center px-6">
+              <div className="text-xs uppercase tracking-[0.3em] text-neutral-300 mb-3">
+                Story Scene
+              </div>
+              <div className="text-2xl md:text-3xl font-bold text-white">
+                {scene.speaker || "Narrator"}
+              </div>
+              <div className="mt-4 text-sm text-neutral-400">
+                Portrait / character art can go here later
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative border-t border-white/10 bg-black/65 backdrop-blur-md p-6 md:p-7">
+          <div className="mb-3">
+            <div className="inline-block rounded-xl bg-amber-200 px-4 py-2 text-sm font-bold text-neutral-900 shadow">
+              {scene.speaker || "Narrator"}
+            </div>
+          </div>
+          <div className="text-left text-lg leading-8 text-neutral-100 min-h-[120px]">
+            {scene.text}
+          </div>
+          <div className="mt-4 text-right text-xs uppercase tracking-[0.2em] text-neutral-400">
+            Click continue
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-100 p-4">
-      <div className="bg-white p-8 rounded-3xl shadow-xl text-center max-w-3xl w-full">
-        <h1 className="text-3xl font-bold mb-3">Global Conquest</h1>
-        <p className="text-neutral-600 mb-6">
-          A campaign of 19 parts: 10 story scenes and 9 special battle missions.
-        </p>
+    <div className="min-h-screen bg-neutral-950 p-4 md:p-6">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl font-black text-white tracking-wide">
+              Global Conquest
+            </h1>
+            <p className="text-sm text-neutral-400">
+              Chapter {campaign.chapterIndex + 1} / {campaign.chapters.length}
+            </p>
+          </div>
 
-        <div className="rounded-2xl bg-neutral-100 p-5 text-left">
-          <div className="mt-4 text-sm text-neutral-600">
-            Progress: Chapter {campaign.chapterIndex + 1} / {campaign.chapters.length}
-          </div>
-          <div className="text-sm uppercase tracking-wide text-neutral-500 mb-2">
-            Current Chapter
-          </div>
-          <div className="text-2xl font-bold mb-2">{currentChapter.title}</div>
-          <div className="text-neutral-700">
-            {currentChapter.type === "story"
-              ? currentChapter.text
-              : `Mission: ${currentChapter.missionName} — ${variantLabel(currentChapter.whiteArmy)} vs ${variantLabel(currentChapter.blackArmy)}`}
+          <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-neutral-300">
+            <div className="font-semibold text-white">{currentChapter.title}</div>
+            {currentChapter.type === "battle" && (
+              <div className="mt-1 text-neutral-400">
+                {variantLabel(currentChapter.whiteArmy)} vs{" "}
+                {variantLabel(currentChapter.blackArmy)}
+              </div>
+            )}
+            {currentChapter.type === "story" && currentChapter.scenes?.length > 0 && (
+              <div className="mt-1 text-neutral-400">
+                Scene {Math.min(campaignSceneIndex + 1, currentChapter.scenes.length)} /{" "}
+                {currentChapter.scenes.length}
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="flex justify-center gap-3 mt-6">
-          <button
-            onClick={() => {
-              cancelAiThinking();
-              setCampaign(null);
-              setMode(null);
-              setPlayerColor(null);
-              setVariant(null);
-              setWorldWarSetup(null);
-              setHannibalSetup(null);
-              setHannibalSelectedSlot(null);
-              setSelectedReserve(null);
-              setPendingPromotion(null);
-              setLastMove(null);
-              setKatanaEffect(null);
-              setEndOverlay(null);
-              setSkipOverlay(null);
-              setResurrectionOverlay(null);
-              setGame(createInitialState("normal"));
-            }}
-            className="px-5 py-3 rounded-2xl bg-neutral-200"
-          >
-            Back
-          </button>
+        {currentChapter.type === "story" ? (
+          <>
+            {renderStoryScene(currentScene)}
 
-          <button
-            onClick={() => {
-              const chapter = campaign.chapters[campaign.chapterIndex];
+            <div className="mt-5 flex justify-between gap-3">
+              <button
+                onClick={leaveCampaignToMenu}
+                className="px-5 py-3 rounded-2xl bg-neutral-200 text-neutral-900 font-medium"
+              >
+                Back
+              </button>
 
-              if (chapter.type === "story") {
-                const nextIndex = campaign.chapterIndex + 1;
-                if (nextIndex < campaign.chapters.length) {
-                  const updatedCampaign = {
-                    ...campaign,
-                    chapterIndex: nextIndex,
-                  };
-                  setCampaign(updatedCampaign);
-                  saveCampaignProgress(updatedCampaign);
-                }
-                return;
-              }
+              <div className="flex gap-3">
+                {campaignSceneIndex > 0 && (
+                  <button
+                    onClick={() => setCampaignSceneIndex((prev) => Math.max(0, prev - 1))}
+                    className="px-5 py-3 rounded-2xl bg-neutral-800 text-white font-medium"
+                  >
+                    Previous
+                  </button>
+                )}
 
-              startCampaignBattle(chapter);
-            }}
-            className="px-5 py-3 rounded-2xl bg-neutral-900 text-white"
-          >
-            {currentChapter.type === "story" ? "Continue" : "Start Mission"}
-          </button>
-        </div>
+                <button
+                  onClick={() => {
+                    if (!isLastScene) {
+                      setCampaignSceneIndex((prev) => prev + 1);
+                      return;
+                    }
+                    goToNextCampaignChapter();
+                  }}
+                  className="px-5 py-3 rounded-2xl bg-amber-300 text-neutral-950 font-bold shadow-lg"
+                >
+                  {isLastScene ? "Continue" : "Next"}
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-red-950 via-neutral-900 to-black p-8 text-white shadow-2xl min-h-[420px] flex flex-col justify-between">
+              <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,white_0%,transparent_55%)]" />
+
+              <div className="relative">
+                <div className="text-xs uppercase tracking-[0.25em] text-red-200 mb-2">
+                  Battle Mission
+                </div>
+                <h2 className="text-4xl font-black tracking-wide">
+                  {currentChapter.missionName}
+                </h2>
+              </div>
+
+              <div className="relative grid md:grid-cols-2 gap-4">
+                <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
+                  <div className="text-sm uppercase tracking-wide text-neutral-400 mb-2">
+                    White Army
+                  </div>
+                  <div className="text-2xl font-bold">
+                    {variantLabel(currentChapter.whiteArmy)}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
+                  <div className="text-sm uppercase tracking-wide text-neutral-400 mb-2">
+                    Black Army
+                  </div>
+                  <div className="text-2xl font-bold">
+                    {variantLabel(currentChapter.blackArmy)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="relative rounded-2xl bg-black/25 border border-white/10 p-5 text-left">
+                <div className="text-lg font-semibold text-red-100 mb-2">
+                  The battlefield awaits
+                </div>
+                <div className="text-neutral-200 leading-7">
+                  Prepare for the next campaign clash. Victory advances your conquest.
+                  Defeat ends your story.
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-between gap-3">
+              <button
+                onClick={leaveCampaignToMenu}
+                className="px-5 py-3 rounded-2xl bg-neutral-200 text-neutral-900 font-medium"
+              >
+                Back
+              </button>
+
+              <button
+                onClick={() => startCampaignBattle(currentChapter)}
+                className="px-5 py-3 rounded-2xl bg-amber-300 text-neutral-950 font-bold shadow-lg"
+              >
+                Start Mission
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -4619,132 +4973,159 @@ if (mode === "campaign" && campaign) {
             <h1 className="text-3xl font-bold">Playable Chess</h1>
             <p className="text-sm text-neutral-600">
               {mode === "ai"
-  ? `Mode: vs Computer • ${AI_NAME} • Variant: ${
-      variant === "worldwar"
-        ? `World War (${variantLabel(game.whiteArmy)} vs ${variantLabel(game.blackArmy)})`
-        : variantLabelName(variant)
-    }`
-  : `Mode: Two Player • Variant: ${
-      variant === "worldwar"
-        ? `World War (${variantLabel(game.whiteArmy)} vs ${variantLabel(game.blackArmy)})`
-        : variantLabelName(variant)
-    }`}
+                ? `Mode: vs Computer • ${AI_NAME} • Variant: ${
+                    variant === "worldwar"
+                      ? `World War (${variantLabel(game.whiteArmy)} vs ${variantLabel(game.blackArmy)})`
+                      : variantLabelName(variant)
+                  }`
+                : `Mode: Two Player • Variant: ${
+                    variant === "worldwar"
+                      ? `World War (${variantLabel(game.whiteArmy)} vs ${variantLabel(game.blackArmy)})`
+                      : variantLabelName(variant)
+                  }`}
             </p>
           </div>
-{import.meta.env.DEV && (
-  <div className="flex gap-2 shrink-0">
-    <>
-      <button
-        onClick={() => triggerDevResult("win")}
-        className="px-4 py-2 bg-green-700 text-white rounded-xl"
-      >
-        Dev Win
-      </button>
 
-      <button
-        onClick={() => triggerDevResult("loss")}
-        className="px-4 py-2 bg-red-700 text-white rounded-xl"
-      >
-        Dev Loss
-      </button>
+          {import.meta.env.DEV && (
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={() => triggerDevResult("win")}
+                className="px-4 py-2 bg-green-700 text-white rounded-xl"
+              >
+                Dev Win
+              </button>
 
-      <button
-        onClick={() => triggerDevResult("draw")}
-        className="px-4 py-2 bg-yellow-600 text-white rounded-xl"
-      >
-        Dev Draw
-      </button>
-    </>
+              <button
+                onClick={() => triggerDevResult("loss")}
+                className="px-4 py-2 bg-red-700 text-white rounded-xl"
+              >
+                Dev Loss
+              </button>
 
-    <button
-      onClick={() => {
-        cancelAiThinking();
-        setPendingPromotion(null);
-        resetGame();
-      }}
-      className="px-4 py-2 bg-neutral-200 rounded-xl"
-    >
-      New Game
-    </button>
+              <button
+                onClick={() => triggerDevResult("draw")}
+                className="px-4 py-2 bg-yellow-600 text-white rounded-xl"
+              >
+                Dev Draw
+              </button>
 
-    <button
-      onClick={() => {
-        cancelAiThinking();
-        clearEngineCaches();
-        setPendingPromotion(null);
-        setMode(null);
-        setPlayerColor(null);
-        setVariant(null);
-        setWorldWarSetup(null);
-        setHannibalSetup(null);
-        setHannibalSelectedSlot(null);
-        setSelectedReserve(null);
-        setLastMove(null);
-        setKatanaEffect(null);
-        setEndOverlay(null);
-        setSkipOverlay(null);
-        setResurrectionOverlay(null);
-        setGame(createInitialState("normal"));
-      }}
-      className="px-4 py-2 bg-neutral-800 text-white rounded-xl"
-    >
-      Menu
-    </button>
-  </div>
-)}
+              <button
+                onClick={() => {
+                  cancelAiThinking();
+                  setPendingPromotion(null);
+                  resetGame();
+                }}
+                className="px-4 py-2 bg-neutral-200 rounded-xl"
+              >
+                New Game
+              </button>
 
-<div className="grid gap-4 xl:grid-cols-[minmax(760px,820px)_320px] items-start">
-            <div className="grid grid-cols-[32px_repeat(8,minmax(84px,1fr))] grid-rows-[repeat(8,minmax(84px,1fr))_32px] border bg-white rounded-2xl overflow-hidden shadow-lg aspect-square">
-              {rowOrder.map((r) => (
-                <React.Fragment key={r}>
-                  <div className="flex items-center justify-center text-xs bg-neutral-200 font-semibold">{8 - r}</div>
-                  {colOrder.map((c) => {
-                    const dark = (r + c) % 2 === 1;
-                    const piece = game.board[r][c];
-                    const highlight = squareHighlighted(r, c);
-                    const selected = selectedSquare(r, c);
-                    const inCheckKing = piece === `${game.turn}k` && gameSummary.inCheck;
-                    return (
-                      <button
-                        key={`${r}-${c}`}
-                        onClick={() => handleSquareClick(r, c)}
-                        className={`relative aspect-square text-4xl md:text-5xl lg:text-6xl transition-all duration-300 overflow-hidden ${dark ? "bg-amber-700" : "bg-amber-100"} ${selected ? "ring-4 ring-sky-500 ring-inset" : ""} ${inCheckKing ? "ring-4 ring-red-500 ring-inset" : ""} ${isLastMoveSquare(r, c) ? "shadow-[inset_0_0_0_9999px_rgba(250,204,21,0.22)]" : ""}`}
-                      >
-                        {highlight && (
-                          <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <span className={`${piece ? "h-12 w-12 border-4 border-emerald-500 rounded-full" : "h-4 w-4 bg-emerald-500 rounded-full"}`} />
-                          </span>
-                        )}
-                        {isLastMoveToSquare(r, c) && (
-                          <span className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                            <span className="h-16 w-16 rounded-full border-4 border-yellow-300/90 animate-ping" />
-                          </span>
-                        )}
-                        {isKatanaRemovedSquare(r, c) && (
-                          <>
-                            <span className="absolute inset-0 pointer-events-none bg-red-500/25 animate-pulse" />
-                            <span className="absolute inset-[-20%] pointer-events-none flex items-center justify-center text-5xl md:text-6xl text-white/90 rotate-[-28deg] animate-pulse">╱</span>
-                            <span className="absolute inset-0 pointer-events-none border-2 border-red-400/80 animate-ping" />
-                          </>
-                        )}
-                        <span
-  className={`relative z-10 transition-transform duration-200 ${isLastMoveToSquare(r, c) ? "scale-110" : "scale-100"} ${pieceClass(piece)}`}
-  style={pieceFontStyle()}
->
-  {piece ? PIECES[piece] : ""}
-</span>
-                      </button>
-                    );
-                  })}
-                </React.Fragment>
-              ))}
-              <div />
-              {colOrder.map((c) => (
-                <div key={c} className="text-xs flex items-center justify-center bg-neutral-200 font-semibold">
-                  {FILES[c]}
-                </div>
-              ))}
+              <button
+                onClick={() => {
+                  cancelAiThinking();
+                  clearEngineCaches();
+                  setPendingPromotion(null);
+                  setMode(null);
+                  setPlayerColor(null);
+                  setVariant(null);
+                  setWorldWarSetup(null);
+                  setHannibalSetup(null);
+                  setHannibalSelectedSlot(null);
+                  setSelectedReserve(null);
+                  setLastMove(null);
+                  setKatanaEffect(null);
+                  setEndOverlay(null);
+                  setSkipOverlay(null);
+                  setResurrectionOverlay(null);
+                  setGame(createInitialState("normal"));
+                }}
+                className="px-4 py-2 bg-neutral-800 text-white rounded-xl"
+              >
+                Menu
+              </button>
             </div>
+          )}
+        </div>
+
+              <div className="grid gap-4 xl:grid-cols-[minmax(760px,820px)_320px] items-start">
+          <div className="grid grid-cols-[32px_repeat(8,minmax(84px,1fr))] grid-rows-[repeat(8,minmax(84px,1fr))_32px] border bg-white rounded-2xl overflow-hidden shadow-lg aspect-square">
+            {rowOrder.map((r) => (
+              <React.Fragment key={r}>
+                <div className="flex items-center justify-center text-xs bg-neutral-200 font-semibold">
+                  {8 - r}
+                </div>
+                {colOrder.map((c) => {
+                  const dark = (r + c) % 2 === 1;
+                  const piece = game.board[r][c];
+                  const highlight = squareHighlighted(r, c);
+                  const selected = selectedSquare(r, c);
+                  const inCheckKing = piece === `${game.turn}k` && gameSummary.inCheck;
+
+                  return (
+                    <button
+                      key={`${r}-${c}`}
+                      onClick={() => handleSquareClick(r, c)}
+                      className={`relative aspect-square text-4xl md:text-5xl lg:text-6xl transition-all duration-300 overflow-hidden ${
+                        dark ? "bg-amber-700" : "bg-amber-100"
+                      } ${selected ? "ring-4 ring-sky-500 ring-inset" : ""} ${
+                        inCheckKing ? "ring-4 ring-red-500 ring-inset" : ""
+                      } ${
+                        isLastMoveSquare(r, c)
+                          ? "shadow-[inset_0_0_0_9999px_rgba(250,204,21,0.22)]"
+                          : ""
+                      }`}
+                    >
+                      {highlight && (
+                        <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <span
+                            className={`${
+                              piece
+                                ? "h-12 w-12 border-4 border-emerald-500 rounded-full"
+                                : "h-4 w-4 bg-emerald-500 rounded-full"
+                            }`}
+                          />
+                        </span>
+                      )}
+
+                      {isLastMoveToSquare(r, c) && (
+                        <span className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                          <span className="h-16 w-16 rounded-full border-4 border-yellow-300/90 animate-ping" />
+                        </span>
+                      )}
+
+                      {isKatanaRemovedSquare(r, c) && (
+                        <>
+                          <span className="absolute inset-0 pointer-events-none bg-red-500/25 animate-pulse" />
+                          <span className="absolute inset-[-20%] pointer-events-none flex items-center justify-center text-5xl md:text-6xl text-white/90 rotate-[-28deg] animate-pulse">
+                            ╱
+                          </span>
+                          <span className="absolute inset-0 pointer-events-none border-2 border-red-400/80 animate-ping" />
+                        </>
+                      )}
+
+                      <span
+                        className={`relative z-10 transition-transform duration-200 ${
+                          isLastMoveToSquare(r, c) ? "scale-110" : "scale-100"
+                        } ${pieceClass(piece)}`}
+                        style={pieceFontStyle()}
+                      >
+                        {piece ? PIECES[piece] : ""}
+                      </span>
+                    </button>
+                  );
+                })}
+              </React.Fragment>
+            ))}
+
+            <div />
+            {colOrder.map((c) => (
+              <div
+                key={c}
+                className="text-xs flex items-center justify-center bg-neutral-200 font-semibold"
+              >
+                {FILES[c]}
+              </div>
+            ))}
           </div>
 
           <div className="space-y-4 xl:w-[320px] min-w-[280px]">
