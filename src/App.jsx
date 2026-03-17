@@ -1,5 +1,20 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+import brotherPortrait from "./assets/portraits/brother.png";
+import ladyKnightPortrait from "./assets/portraits/ladyKnight.png";
+import squireBoyPortrait from "./assets/portraits/squireBoy.png";
+import hannibalPortrait from "./assets/portraits/hannibal.png";
+import alexanderPortrait from "./assets/portraits/alexander.png";
+import spartanPortrait from "./assets/portraits/spartan.png";
+import romanLeftGeneralPortrait from "./assets/portraits/romanLeftGeneral.png";
+import romanRightGeneralPortrait from "./assets/portraits/romanRightGeneral.png";
+import persianImmortalPortrait from "./assets/portraits/persianImmortal.png";
+import vikingChiefPortrait from "./assets/portraits/vikingChief.png";
+import genghisKhanPortrait from "./assets/portraits/genghisKhan.png";
+import shogun1Portrait from "./assets/portraits/shogun1.png";
+import shogun2Portrait from "./assets/portraits/shogun2.png";
+import worldMapImg from "./assets/maps/worldMap.png";
+
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const PIECES = {
   wp: "♙",
@@ -165,11 +180,15 @@ const GLOBAL_CONQUEST_CHAPTERS = [
       text: "This is the perfect moment to show your genius talent as a great King. Let us get rid of that vestigial pest, my lord!"
     },
     {
-      kind: "map",
-      title: "Europe",
-      background: "worldMap",
-      text: "A local conflict begins in Europe."
-    },
+  kind: "map",
+  title: "Europe",
+  background: "worldMap",
+  text: "A local conflict begins in Europe.",
+  route: {
+    from: { x: 33, y: 33 },
+    to: { x: 42, y: 37 }
+  }
+},
     {
       kind: "dialogue",
       speaker: "Brother",
@@ -190,24 +209,24 @@ const GLOBAL_CONQUEST_CHAPTERS = [
     playerColor: "w",
   },
 
-  {
-    id: 3,
-    type: "story",
-    title: "The Northern Raiders",
-    scenes: [
-      { kind: "dialogue", speaker: "Lady Knight", text: "You did it! As God wished, it was your destiny and right to be the ruler of this country. And soon, the entire world." },
-      { kind: "dialogue", speaker: "Brother", text: "It is my loss. You are the true King and protagonist. Is it true that you aim for the world, brother? That will be difficult, but with your strength it might be possible." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Of course it is! This is our King we are talking about. And with his indomitable noble army before him, no harm will ever reach our liege." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "Lady Knight! It is an emergency! The Vikings have invaded our land!" },
-      { kind: "dialogue", speaker: "Lady Knight", text: "What? Then we must prepare. But our current soldiers are tired from the previous battle." },
-      { kind: "dialogue", speaker: "Brother", text: "I swear my loyalty to you. I will even volunteer to raise your son while you go on this journey as King. Use my army. Combined with yours, you should have enough forces to fight the Vikings. May you achieve global conquest." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Wonderful. With this, let us face the world and tell them that the land of origin of chess is superior above all other nations." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "Actually, chess originated in i..." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "To the beach!" },
-      { kind: "map", title: "Northern Europe", text: "The march moves north toward the beaches of Europe." },
-      { kind: "dialogue", speaker: "Viking Commander", text: "So you are the new King. I knew it was about time your father passed. With this we will once and for all get rid of you all!" },
-    ],
-  },
+ {
+  id: 3,
+  type: "story",
+  title: "The Northern Raiders",
+  scenes: [
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "throneRoom", text: "You did it! As God wished, it was your destiny and right to be the ruler of this country. And soon, the entire world." },
+    { kind: "dialogue", speaker: "Brother", portrait: "brother", background: "throneRoom", text: "It is my loss. You are the true King and protagonist. Is it true that you aim for the world, brother? That will be difficult, but with your strength it might be possible." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "throneRoom", text: "Of course it is! This is our King we are talking about. And with his indomitable noble army before him, no harm will ever reach our liege." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "throneRoom", text: "Lady Knight! It is an emergency! The Vikings have invaded our land!" },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "throneRoom", text: "What? Then we must prepare. But our current soldiers are tired from the previous battle." },
+    { kind: "dialogue", speaker: "Brother", portrait: "brother", background: "throneRoom", text: "I swear my loyalty to you. I will even volunteer to raise your son while you go on this journey as King. Use my army. Combined with yours, you should have enough forces to fight the Vikings. May you achieve global conquest." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "throneRoom", text: "Wonderful. With this, let us face the world and tell them that the land of origin of chess is superior above all other nations." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "throneRoom", text: "Actually, chess originated in i..." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "throneRoom", text: "To the beach!" },
+    { kind: "map", title: "Northern Europe", background: "worldMap", text: "The march moves north toward the beaches of Europe." },
+    { kind: "dialogue", speaker: "Viking Commander", portrait: "vikingChief", background: "battlefieldDawn", text: "So you are the new King. I knew it was about time your father passed. With this we will once and for all get rid of you all!" },
+  ],
+},
   {
     id: 4,
     type: "battle",
@@ -220,24 +239,24 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   },
 
   {
-    id: 5,
-    type: "story",
-    title: "Riders of the Steppe",
-    scenes: [
-      { kind: "dialogue", speaker: "Viking Commander", text: "It is our loss. I did not know the son of that old wretched man would be such a fighter. From now on, you are our chief!" },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Wonderful. We have toppled our first foreign foe. We are almost there in achieving global conquest." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "But for that, we must extend beyond our territory. We will have to go by sea. We do not have the shipbuilding capacity." },
-      { kind: "dialogue", speaker: "Viking Commander", text: "Shucks, I guess we will just have to swim. Do you all know anybody famous for shipmaking? Maybe we can recruit their help?" },
-      { kind: "dialogue", speaker: "Viking Commander", text: "Hahaha, I am kidding. Hop on, chief. We will take you to the mainland. But be aware. As soon as we land, we will have to face them." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Who?" },
-      { kind: "dialogue", speaker: "Viking Commander", text: "We are the rulers of the sea, but they are the rulers of land. Vast empires stretching farther than our entire territory at sea." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "The Mongols live near where this boat is heading. So we should be careful." },
-      { kind: "map", title: "Asia", text: "The campaign leaves Europe and heads deep into Asia." },
-      { kind: "dialogue", speaker: "Genghis Khan", text: "It has been a while since anyone dared invade our land. Least of all those wet seafarers. You have no place on land. Why even challenge us?" },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Global conquest is ours. You are just a stepping stone." },
-      { kind: "dialogue", speaker: "Genghis Khan", text: "Global conquest? Such a boring goal. Who has that much time to care about expansion and conquest? But I will crush you." },
-    ],
-  },
+  id: 5,
+  type: "story",
+  title: "Riders of the Steppe",
+  scenes: [
+    { kind: "dialogue", speaker: "Viking Commander", portrait: "vikingChief", background: "battlefieldDawn", text: "It is our loss. I did not know the son of that old wretched man would be such a fighter. From now on, you are our chief!" },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Wonderful. We have toppled our first foreign foe. We are almost there in achieving global conquest." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "But for that, we must extend beyond our territory. We will have to go by sea. We do not have the shipbuilding capacity." },
+    { kind: "dialogue", speaker: "Viking Commander", portrait: "vikingChief", background: "battlefieldDawn", text: "Shucks, I guess we will just have to swim. Do you all know anybody famous for shipmaking? Maybe we can recruit their help?" },
+    { kind: "dialogue", speaker: "Viking Commander", portrait: "vikingChief", background: "battlefieldDawn", text: "Hahaha, I am kidding. Hop on, chief. We will take you to the mainland. But be aware. As soon as we land, we will have to face them." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Who?" },
+    { kind: "dialogue", speaker: "Viking Commander", portrait: "vikingChief", background: "battlefieldDawn", text: "We are the rulers of the sea, but they are the rulers of land. Vast empires stretching farther than our entire territory at sea." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "The Mongols live near where this boat is heading. So we should be careful." },
+    { kind: "map", title: "Asia", background: "worldMap", text: "The campaign leaves Europe and heads deep into Asia." },
+    { kind: "dialogue", speaker: "Genghis Khan", portrait: "genghisKhan", background: "battlefieldDawn", text: "It has been a while since anyone dared invade our land. Least of all those wet seafarers. You have no place on land. Why even challenge us?" },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Global conquest is ours. You are just a stepping stone." },
+    { kind: "dialogue", speaker: "Genghis Khan", portrait: "genghisKhan", background: "battlefieldDawn", text: "Global conquest? Such a boring goal. Who has that much time to care about expansion and conquest? But I will crush you." },
+  ],
+},
   {
     id: 6,
     type: "battle",
@@ -250,20 +269,20 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   },
 
   {
-    id: 7,
-    type: "story",
-    title: "The Divine Wind",
-    scenes: [
-      { kind: "dialogue", speaker: "Genghis Khan", text: "To feel such defeat! Finally a fight that felt joyous. It has been generations since I met a man like you." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Congratulations. With this we can travel the land freely and challenge all other rivals." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "I have heard tales from merchants. Down south there is land where the world's biggest and most formidable armies have been locked in centuries of battle. If someone is to achieve global conquest, it is a path we cannot avoid." },
-      { kind: "dialogue", speaker: "Genghis Khan", text: "Before that, would you avenge me with your might? There is an island east from here. On scrolls they are weak, pathetic, and without resources. But when we last invaded, a typhoon destroyed our army. They called it the divine wind." },
-      { kind: "dialogue", speaker: "Genghis Khan", text: "Such a way of winning is shameful. They denied us our right to noble battle, and wrongfully took pride in it. If you wish to challenge the south, prove that you have the strength. Show that you will not lose your army to mere misfortune." },
-      { kind: "map", title: "Japan", text: "The route shifts east from mainland Asia to Japan." },
-      { kind: "dialogue", speaker: "Shogun", text: "They have returned yet again. No? Their leader is different from the last. Yet the outcome will be the same." },
-      { kind: "dialogue", speaker: "Shogun", text: "Ready the army. Ready the typhoon. For honor we fight. Destroy them all, or disembowel!" },
-    ],
-  },
+  id: 7,
+  type: "story",
+  title: "The Divine Wind",
+  scenes: [
+    { kind: "dialogue", speaker: "Genghis Khan", portrait: "genghisKhan", background: "battlefieldDawn", text: "To feel such defeat! Finally a fight that felt joyous. It has been generations since I met a man like you." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Congratulations. With this we can travel the land freely and challenge all other rivals." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "I have heard tales from merchants. Down south there is land where the world's biggest and most formidable armies have been locked in centuries of battle. If someone is to achieve global conquest, it is a path we cannot avoid." },
+    { kind: "dialogue", speaker: "Genghis Khan", portrait: "genghisKhan", background: "battlefieldDawn", text: "Before that, would you avenge me with your might? There is an island east from here. On scrolls they are weak, pathetic, and without resources. But when we last invaded, a typhoon destroyed our army. They called it the divine wind." },
+    { kind: "dialogue", speaker: "Genghis Khan", portrait: "genghisKhan", background: "battlefieldDawn", text: "Such a way of winning is shameful. They denied us our right to noble battle, and wrongfully took pride in it. If you wish to challenge the south, prove that you have the strength. Show that you will not lose your army to mere misfortune." },
+    { kind: "map", title: "Japan", background: "worldMap", text: "The route shifts east from mainland Asia to Japan." },
+    { kind: "dialogue", speaker: "Shogun", portrait: "shogun1", background: "battlefieldDawn", text: "They have returned yet again. No? Their leader is different from the last. Yet the outcome will be the same." },
+    { kind: "dialogue", speaker: "Shogun", portrait: "shogun1", background: "battlefieldDawn", text: "Ready the army. Ready the typhoon. For honor we fight. Destroy them all, or disembowel!" },
+  ],
+},
   {
     id: 8,
     type: "battle",
@@ -276,21 +295,21 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   },
 
   {
-    id: 9,
-    type: "story",
-    title: "The Land of War",
-    scenes: [
-      { kind: "dialogue", speaker: "Shogun 2", text: "Congratulations, our King, for the noble battle. Unfortunately, we are unable to lend you that previous army, as they have all decided it was too shameful to live. Yet fear not. The rest of this land are willing to assist you. You are going south, yes?" },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Yes. We will finally challenge the major leagues. Thank you for your assistance. Let us all head over and see what the land of war is truly like." },
-      { kind: "map", title: "Greece", text: "The campaign moves west toward Greece." },
-      { kind: "dialogue", speaker: "Shogun 2", text: "I see. So these are the people of war. Like us, they are true warriors." },
-      { kind: "dialogue", speaker: "Spartan", text: "Those of the east have no right upon this sacred land. Head back now." },
-      { kind: "dialogue", speaker: "Spartan", text: "Especially those cowardly enough to rely on cavalry and archery." },
-      { kind: "dialogue", speaker: "Shogun 2", text: "I heard tales that your army of three hundred were able to defeat an army of ten thousand immortal demons. That is truly proof of heroism. Yet if I must say... seven of us would have sufficed." },
-      { kind: "dialogue", speaker: "Shogun 2", text: "We the samurai will cut through your head, shield-bearer." },
-      { kind: "dialogue", speaker: "Spartan", text: "We are SPARTANS!" },
-    ],
-  },
+  id: 9,
+  type: "story",
+  title: "The Land of War",
+  scenes: [
+    { kind: "dialogue", speaker: "Shogun 2", portrait: "shogun2", background: "battlefieldDawn", text: "Congratulations, our King, for the noble battle. Unfortunately, we are unable to lend you that previous army, as they have all decided it was too shameful to live. Yet fear not. The rest of this land are willing to assist you. You are going south, yes?" },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Yes. We will finally challenge the major leagues. Thank you for your assistance. Let us all head over and see what the land of war is truly like." },
+    { kind: "map", title: "Greece", background: "worldMap", text: "The campaign moves west toward Greece." },
+    { kind: "dialogue", speaker: "Shogun 2", portrait: "shogun2", background: "battlefieldDawn", text: "I see. So these are the people of war. Like us, they are true warriors." },
+    { kind: "dialogue", speaker: "Spartan", portrait: "spartan", background: "battlefieldDawn", text: "Those of the east have no right upon this sacred land. Head back now." },
+    { kind: "dialogue", speaker: "Spartan", portrait: "spartan", background: "battlefieldDawn", text: "Especially those cowardly enough to rely on cavalry and archery." },
+    { kind: "dialogue", speaker: "Shogun 2", portrait: "shogun2", background: "battlefieldDawn", text: "I heard tales that your army of three hundred were able to defeat an army of ten thousand immortal demons. That is truly proof of heroism. Yet if I must say... seven of us would have sufficed." },
+    { kind: "dialogue", speaker: "Shogun 2", portrait: "shogun2", background: "battlefieldDawn", text: "We the samurai will cut through your head, shield-bearer." },
+    { kind: "dialogue", speaker: "Spartan", portrait: "spartan", background: "battlefieldDawn", text: "We are SPARTANS!" },
+  ],
+},
   {
     id: 10,
     type: "battle",
@@ -303,38 +322,38 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   },
 
   {
-    id: 11,
-    type: "story",
-    title: "The Center of the World",
-    scenes: [
-      { kind: "dialogue", speaker: "Spartan", text: "It is our loss." },
-      { kind: "dialogue", speaker: "Shogun 2", text: "No, you did not lose in spirit, for you fought well. I have never seen such valiant warriors." },
-      { kind: "dialogue", speaker: "Spartan", text: "Your words mean much, brother of the east." },
-      { kind: "dialogue", speaker: "Shogun 2", text: "So do yours, my southwestern brethren." },
-      { kind: "dialogue", speaker: "Spartan", text: "Anyway, my King. Your genius in tactics is something to behold. Perhaps you may even match him..." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Him?" },
-      { kind: "dialogue", speaker: "Squire Boy", text: "I believe we have some company." },
-      { kind: "dialogue", speaker: "Spartan", text: "They are back yet again!" },
-      { kind: "dialogue", speaker: "Persian Immortals", text: "So it is true, that a new army has come, uniting the north and the far east. Now you have come to the center of the world." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Who are they?" },
-      { kind: "dialogue", speaker: "Spartan", text: "The Immortals. No matter how many we defeat, their numbers never decrease for long. One of the candidates in the race for global conquest." },
-      { kind: "dialogue", speaker: "Persian Immortals", text: "Unfortunately, we are no longer in competition." },
-      { kind: "dialogue", speaker: "Spartan", text: "What do you mean?" },
-      { kind: "dialogue", speaker: "???", text: "It means they are my vassals now." },
-      { kind: "dialogue", speaker: "Hannibal", text: "Good evening." },
-      { kind: "dialogue", speaker: "Spartan", text: "Hannibal. It is him, the man whose genius rivals, no, surpasses yours." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "How dare you say that to your King!" },
-      { kind: "dialogue", speaker: "Hannibal", text: "Hahaha, spare him some slack, miss. For he tells the truth. As I am one battle away from achieving global conquest." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "What?" },
-      { kind: "dialogue", speaker: "Hannibal", text: "One last battle with the Romans, and upon victory I will be crowned the greatest general in history." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "You have never even fought us and claim global conquest?" },
-      { kind: "dialogue", speaker: "Hannibal", text: "I am sorry, who are you? I know no such knight, nor the name of your lord." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Grrr... Our King demands a duel! We shall prove our might!" },
-      { kind: "dialogue", speaker: "Hannibal", text: "I decline. I have no time to deal with mere insects, as I have my battle with the Romans. But... I suppose I can send someone your size to play with you." },
-      { kind: "dialogue", speaker: "Persian Immortals", text: "Understood. We shall call our army and strike at dawn." },
-      { kind: "dialogue", speaker: "Spartan", text: "Then this time for sure, our new King will finish you off!" },
-    ],
-  },
+  id: 11,
+  type: "story",
+  title: "The Center of the World",
+  scenes: [
+    { kind: "dialogue", speaker: "Spartan", portrait: "spartan", background: "battlefieldDawn", text: "It is our loss." },
+    { kind: "dialogue", speaker: "Shogun 2", portrait: "shogun2", background: "battlefieldDawn", text: "No, you did not lose in spirit, for you fought well. I have never seen such valiant warriors." },
+    { kind: "dialogue", speaker: "Spartan", portrait: "spartan", background: "battlefieldDawn", text: "Your words mean much, brother of the east." },
+    { kind: "dialogue", speaker: "Shogun 2", portrait: "shogun2", background: "battlefieldDawn", text: "So do yours, my southwestern brethren." },
+    { kind: "dialogue", speaker: "Spartan", portrait: "spartan", background: "battlefieldDawn", text: "Anyway, my King. Your genius in tactics is something to behold. Perhaps you may even match him..." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Him?" },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "I believe we have some company." },
+    { kind: "dialogue", speaker: "Spartan", portrait: "spartan", background: "battlefieldDawn", text: "They are back yet again!" },
+    { kind: "dialogue", speaker: "Persian Immortals", portrait: "persianImmortal", background: "battlefieldDawn", text: "So it is true, that a new army has come, uniting the north and the far east. Now you have come to the center of the world." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Who are they?" },
+    { kind: "dialogue", speaker: "Spartan", portrait: "spartan", background: "battlefieldDawn", text: "The Immortals. No matter how many we defeat, their numbers never decrease for long. One of the candidates in the race for global conquest." },
+    { kind: "dialogue", speaker: "Persian Immortals", portrait: "persianImmortal", background: "battlefieldDawn", text: "Unfortunately, we are no longer in competition." },
+    { kind: "dialogue", speaker: "Spartan", portrait: "spartan", background: "battlefieldDawn", text: "What do you mean?" },
+    { kind: "dialogue", speaker: "???", portrait: "hannibal", background: "battlefieldDawn", text: "It means they are my vassals now." },
+    { kind: "dialogue", speaker: "Hannibal", portrait: "hannibal", background: "battlefieldDawn", text: "Good evening." },
+    { kind: "dialogue", speaker: "Spartan", portrait: "spartan", background: "battlefieldDawn", text: "Hannibal. It is him, the man whose genius rivals, no, surpasses yours." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "How dare you say that to your King!" },
+    { kind: "dialogue", speaker: "Hannibal", portrait: "hannibal", background: "battlefieldDawn", text: "Hahaha, spare him some slack, miss. For he tells the truth. As I am one battle away from achieving global conquest." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "What?" },
+    { kind: "dialogue", speaker: "Hannibal", portrait: "hannibal", background: "battlefieldDawn", text: "One last battle with the Romans, and upon victory I will be crowned the greatest general in history." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "You have never even fought us and claim global conquest?" },
+    { kind: "dialogue", speaker: "Hannibal", portrait: "hannibal", background: "battlefieldDawn", text: "I am sorry, who are you? I know no such knight, nor the name of your lord." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Grrr... Our King demands a duel! We shall prove our might!" },
+    { kind: "dialogue", speaker: "Hannibal", portrait: "hannibal", background: "battlefieldDawn", text: "I decline. I have no time to deal with mere insects, as I have my battle with the Romans. But... I suppose I can send someone your size to play with you." },
+    { kind: "dialogue", speaker: "Persian Immortals", portrait: "persianImmortal", background: "battlefieldDawn", text: "Understood. We shall call our army and strike at dawn." },
+    { kind: "dialogue", speaker: "Spartan", portrait: "spartan", background: "battlefieldDawn", text: "Then this time for sure, our new King will finish you off!" },
+  ],
+},
   {
     id: 12,
     type: "battle",
@@ -347,36 +366,36 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   },
 
   {
-    id: 13,
-    type: "story",
-    title: "The Crown Is Taken",
-    scenes: [
-      { kind: "dialogue", speaker: "Persian Immortals", text: "......" },
-      { kind: "dialogue", speaker: "Spartan", text: "This time, for sure, we must kill all of them, my lord. Do not show them mercy. By tomorrow they will return with full strength." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "My liege, if I may, your strength comes from your ability to recruit the armies you defeat. If you are to achieve global conquest, and defeat Rome or even Hannibal, it will be best to acquire as many forces as possible." },
-      { kind: "dialogue", speaker: "Spartan", text: "No. You do not understand. You must not spare the Immortals." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "My liege, I have received news. The Roman army of eighty thousand have fallen." },
-      { kind: "dialogue", speaker: "Spartan", text: "!" },
-      { kind: "dialogue", speaker: "Persian Immortals", text: "!" },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Hannibal Barca has been crowned as the greatest general in history and was given the crown of global conquest..." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "Were we too late?..." },
-      { kind: "dialogue", speaker: "Persian Immortals", text: "Take us." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "What?" },
-      { kind: "dialogue", speaker: "Persian Immortals", text: "Hannibal was a genius, but he was no king. With the crown of global conquest, all middle powers of the world who could not compete must now pick his side or fall." },
-      { kind: "dialogue", speaker: "Persian Immortals", text: "Yet if we must choose a king, we shall believe in you." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Then it is decided. We will topple Hannibal and achieve global conquest!" },
-      { kind: "dialogue", speaker: "Persian Immortals", text: "Not yet. You will lose. Capture the Romans first. Although defeated, the Romans will continue to fight until the last man." },
-      { kind: "dialogue", speaker: "Persian Immortals", text: "You are a king who can unite people. You will need the Romans to challenge Hannibal in his full might." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Then we take Rome." },
-      { kind: "dialogue", speaker: "Persian Immortals", text: "Although our army has been destroyed, a new legion is coming here by tomorrow. You will have fresh troops to lead into victory." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Thank you." },
-      { kind: "map", title: "Rome", text: "The road turns west toward Rome." },
-      { kind: "dialogue", speaker: "Roman General (Left)", text: "One after the other!" },
-      { kind: "dialogue", speaker: "Roman General (Right)", text: "They are foolish if they believe they can capture Rome even at its weakest!" },
-      { kind: "dialogue", speaker: "Roman General (Left)", text: "We shall crush this new King!" },
-      { kind: "dialogue", speaker: "Roman General (Right)", text: "And then take Hannibal's head!" },
-    ],
-  },
+  id: 13,
+  type: "story",
+  title: "The Crown Is Taken",
+  scenes: [
+    { kind: "dialogue", speaker: "Persian Immortals", portrait: "persianImmortal", background: "battlefieldDawn", text: "......" },
+    { kind: "dialogue", speaker: "Spartan", portrait: "spartan", background: "battlefieldDawn", text: "This time, for sure, we must kill all of them, my lord. Do not show them mercy. By tomorrow they will return with full strength." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "My liege, if I may, your strength comes from your ability to recruit the armies you defeat. If you are to achieve global conquest, and defeat Rome or even Hannibal, it will be best to acquire as many forces as possible." },
+    { kind: "dialogue", speaker: "Spartan", portrait: "spartan", background: "battlefieldDawn", text: "No. You do not understand. You must not spare the Immortals." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "My liege, I have received news. The Roman army of eighty thousand have fallen." },
+    { kind: "dialogue", speaker: "Spartan", portrait: "spartan", background: "battlefieldDawn", text: "!" },
+    { kind: "dialogue", speaker: "Persian Immortals", portrait: "persianImmortal", background: "battlefieldDawn", text: "!" },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Hannibal Barca has been crowned as the greatest general in history and was given the crown of global conquest..." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "Were we too late?..." },
+    { kind: "dialogue", speaker: "Persian Immortals", portrait: "persianImmortal", background: "battlefieldDawn", text: "Take us." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "What?" },
+    { kind: "dialogue", speaker: "Persian Immortals", portrait: "persianImmortal", background: "battlefieldDawn", text: "Hannibal was a genius, but he was no king. With the crown of global conquest, all middle powers of the world who could not compete must now pick his side or fall." },
+    { kind: "dialogue", speaker: "Persian Immortals", portrait: "persianImmortal", background: "battlefieldDawn", text: "Yet if we must choose a king, we shall believe in you." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Then it is decided. We will topple Hannibal and achieve global conquest!" },
+    { kind: "dialogue", speaker: "Persian Immortals", portrait: "persianImmortal", background: "battlefieldDawn", text: "Not yet. You will lose. Capture the Romans first. Although defeated, the Romans will continue to fight until the last man." },
+    { kind: "dialogue", speaker: "Persian Immortals", portrait: "persianImmortal", background: "battlefieldDawn", text: "You are a king who can unite people. You will need the Romans to challenge Hannibal in his full might." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Then we take Rome." },
+    { kind: "dialogue", speaker: "Persian Immortals", portrait: "persianImmortal", background: "battlefieldDawn", text: "Although our army has been destroyed, a new legion is coming here by tomorrow. You will have fresh troops to lead into victory." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Thank you." },
+    { kind: "map", title: "Rome", background: "worldMap", text: "The road turns west toward Rome." },
+    { kind: "dialogue", speaker: "Roman General (Left)", portrait: "romanLeftGeneral", background: "battlefieldDawn", text: "One after the other!" },
+    { kind: "dialogue", speaker: "Roman General (Right)", portrait: "romanRightGeneral", background: "battlefieldDawn", text: "They are foolish if they believe they can capture Rome even at its weakest!" },
+    { kind: "dialogue", speaker: "Roman General (Left)", portrait: "romanLeftGeneral", background: "battlefieldDawn", text: "We shall crush this new King!" },
+    { kind: "dialogue", speaker: "Roman General (Right)", portrait: "romanRightGeneral", background: "battlefieldDawn", text: "And then take Hannibal's head!" },
+  ],
+},
   {
     id: 14,
     type: "battle",
@@ -389,18 +408,18 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   },
 
   {
-    id: 15,
-    type: "story",
-    title: "The War for the World",
-    scenes: [
-      { kind: "dialogue", speaker: "Roman Generals", text: "We accept. Not our defeat, but to lend our strength. From today on you are an honorary citizen of Rome, and in this time of crisis we elect you as Dictator." },
-      { kind: "dialogue", speaker: "Roman Generals", text: "Lead all of the world, and let us once and for all defeat the General Hannibal of Carthage." },
-      { kind: "map", title: "Carthage", text: "The coalition marches from Rome to Carthage." },
-      { kind: "dialogue", speaker: "Hannibal", text: "It is a shame I still do not know your name. For even I can agree that you too are a great general. Someone who could perhaps challenge my seat as the conqueror of the globe." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "This is it. This decides the greatest general of today." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Let us win." },
-    ],
-  },
+  id: 15,
+  type: "story",
+  title: "The War for the World",
+  scenes: [
+    { kind: "dialogue", speaker: "Roman Generals", portrait: "romanLeftGeneral", background: "battlefieldDawn", text: "We accept. Not our defeat, but to lend our strength. From today on you are an honorary citizen of Rome, and in this time of crisis we elect you as Dictator." },
+    { kind: "dialogue", speaker: "Roman Generals", portrait: "romanRightGeneral", background: "battlefieldDawn", text: "Lead all of the world, and let us once and for all defeat the General Hannibal of Carthage." },
+    { kind: "map", title: "Carthage", background: "worldMap", text: "The coalition marches from Rome to Carthage." },
+    { kind: "dialogue", speaker: "Hannibal", portrait: "hannibal", background: "battlefieldDawn", text: "It is a shame I still do not know your name. For even I can agree that you too are a great general. Someone who could perhaps challenge my seat as the conqueror of the globe." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "This is it. This decides the greatest general of today." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Let us win." },
+  ],
+},
   {
     id: 16,
     type: "battle",
@@ -413,43 +432,43 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   },
 
   {
-    id: 17,
-    type: "story",
-    title: "The Greatest",
-    scenes: [
-      { kind: "dialogue", speaker: "Lady Knight", text: "We won.... We actually won! My liege! You did it my liege! The crown of Global Conquest is yours." },
-      { kind: "dialogue", speaker: "Hannibal", text: "Hahaha.... Impossible. My glory, my legacy, after all this time and this? It comes to this! No, I refuse! You may break my bones and salt my lands, and I will never give you the title of the greatest general in history!" },
-      { kind: "dialogue", speaker: "Lady Knight", text: "What claims do you have? You have lost. The greatest alive has been decided." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "Yes. Today will be recorded in history as the day the greatest general alive has been crowned and the glory of global conquest has once again been achieved after hundreds of years." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Therefore, give up Hannibal. And recognize the King who stands in front of you." },
-      { kind: "dialogue", speaker: "Hannibal", text: "Mmm. Grrr.... I have no army and lost all of the men who will follow me. Even I am aware of my limits. I shall be known as the second greatest general in history...." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Hurray! He surrendered! With this the battle is complete. And Hannibal, before we leave, from your mouth. If you are the second greatest general, then who is the first?" },
-      { kind: "dialogue", speaker: "Squire Boy", text: "I believe that question is yet to be answered." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "What? Why? It is obviously our King." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "Yes, of today. Hannibal, if our liege did not exist, but you still lost, who do you think would be ranked as the third greatest general throughout history?" },
-      { kind: "dialogue", speaker: "Hannibal", text: "Pyrrhus of Epirus." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "And the second?" },
-      { kind: "dialogue", speaker: "Hannibal", text: "I have conquered Rome, therefore myself." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "Then who would be the greatest in history?" },
-      { kind: "dialogue", speaker: "Hannibal", text: ".....that would be.... Alexander of Macedon." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Where are you going with this hypothetical?" },
-      { kind: "dialogue", speaker: "Squire Boy", text: "I am saying that our liege is the greatest today, but whether he was the greatest of all time is still in debate." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Shut your tongue, squire, or I will cut it off. How dare you speak like that to our King." },
-      { kind: "dialogue", speaker: "Hannibal", text: "Though it is the truth. Both Alexander and you deserve the title of great. Shame that we were not born in his generation. For if we were here centuries earlier, then I would have given everything to have one battle against him." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "Yes, but it is impossible to go back in time." },
-      { kind: "dialogue", speaker: "Hannibal", text: "A shame." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "But forward is not an issue." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "What are you talking about?" },
-      { kind: "dialogue", speaker: "Squire Boy", text: "This is a story about a friend of mine. At twenty he inherited his father's kingdom. Although nervous, he labored his best for excellence. He gathered the world's smartest, and slowly amassed the world's strongest." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "Within a few short years he had conquered his land and the neighboring lands. From the Mediterranean to Egypt, from Europe to India. He became the first in history to achieve global conquest." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "But by his thirties, he had no other rivals. He became desperate to seek out the strong, anyone who could rival him. Yet none from his time could stand a chance. He fell into a great depression and became ill." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "It was then that he met a witch. Together they realized that though none could rival him today, in the future, centuries from then, perhaps there will be a time where someone of such strength will be born yet again." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "And fortune found this era, where not one but two great generals exist at the same moment. Hannibal the Great, and you." },
-      { kind: "dialogue", speaker: "Squire Boy", text: "Across time Alexander and his undefeated army have through sorcery forced our memories and souls to reincarnate in this era!" },
-      { kind: "dialogue", speaker: "Squire Boy", text: "It is I! I am Alexander!" },
-      { kind: "dialogue", speaker: "Squire Boy", text: "Hannibal! And you! Let us see who deserves the title of 'the great' once and for all!" },
-    ],
-  },
+  id: 17,
+  type: "story",
+  title: "The Greatest",
+  scenes: [
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "We won.... We actually won! My liege! You did it my liege! The crown of Global Conquest is yours." },
+    { kind: "dialogue", speaker: "Hannibal", portrait: "hannibal", background: "battlefieldDawn", text: "Hahaha.... Impossible. My glory, my legacy, after all this time and this? It comes to this! No, I refuse! You may break my bones and salt my lands, and I will never give you the title of the greatest general in history!" },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "What claims do you have? You have lost. The greatest alive has been decided." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "Yes. Today will be recorded in history as the day the greatest general alive has been crowned and the glory of global conquest has once again been achieved after hundreds of years." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Therefore, give up Hannibal. And recognize the King who stands in front of you." },
+    { kind: "dialogue", speaker: "Hannibal", portrait: "hannibal", background: "battlefieldDawn", text: "Mmm. Grrr.... I have no army and lost all of the men who will follow me. Even I am aware of my limits. I shall be known as the second greatest general in history...." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Hurray! He surrendered! With this the battle is complete. And Hannibal, before we leave, from your mouth. If you are the second greatest general, then who is the first?" },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "I believe that question is yet to be answered." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "What? Why? It is obviously our King." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "Yes, of today. Hannibal, if our liege did not exist, but you still lost, who do you think would be ranked as the third greatest general throughout history?" },
+    { kind: "dialogue", speaker: "Hannibal", portrait: "hannibal", background: "battlefieldDawn", text: "Pyrrhus of Epirus." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "And the second?" },
+    { kind: "dialogue", speaker: "Hannibal", portrait: "hannibal", background: "battlefieldDawn", text: "I have conquered Rome, therefore myself." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "Then who would be the greatest in history?" },
+    { kind: "dialogue", speaker: "Hannibal", portrait: "hannibal", background: "battlefieldDawn", text: ".....that would be.... Alexander of Macedon." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Where are you going with this hypothetical?" },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "I am saying that our liege is the greatest today, but whether he was the greatest of all time is still in debate." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Shut your tongue, squire, or I will cut it off. How dare you speak like that to our King." },
+    { kind: "dialogue", speaker: "Hannibal", portrait: "hannibal", background: "battlefieldDawn", text: "Though it is the truth. Both Alexander and you deserve the title of great. Shame that we were not born in his generation. For if we were here centuries earlier, then I would have given everything to have one battle against him." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "Yes, but it is impossible to go back in time." },
+    { kind: "dialogue", speaker: "Hannibal", portrait: "hannibal", background: "battlefieldDawn", text: "A shame." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "But forward is not an issue." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "What are you talking about?" },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "This is a story about a friend of mine. At twenty he inherited his father's kingdom. Although nervous, he labored his best for excellence. He gathered the world's smartest, and slowly amassed the world's strongest." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "Within a few short years he had conquered his land and the neighboring lands. From the Mediterranean to Egypt, from Europe to India. He became the first in history to achieve global conquest." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "But by his thirties, he had no other rivals. He became desperate to seek out the strong, anyone who could rival him. Yet none from his time could stand a chance. He fell into a great depression and became ill." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "It was then that he met a witch. Together they realized that though none could rival him today, in the future, centuries from then, perhaps there will be a time where someone of such strength will be born yet again." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "And fortune found this era, where not one but two great generals exist at the same moment. Hannibal the Great, and you." },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "alexander", background: "battlefieldDawn", text: "Across time Alexander and his undefeated army have through sorcery forced our memories and souls to reincarnate in this era!" },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "alexander", background: "battlefieldDawn", text: "It is I! I am Alexander!" },
+    { kind: "dialogue", speaker: "Squire Boy", portrait: "alexander", background: "battlefieldDawn", text: "Hannibal! And you! Let us see who deserves the title of 'the great' once and for all!" },
+  ],
+},
   {
     id: 18,
     type: "battle",
@@ -462,21 +481,21 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   },
 
   {
-    id: 19,
-    type: "story",
-    title: "King the Great",
-    scenes: [
-      { kind: "dialogue", speaker: "Alexander", text: "Ahahahaha, finally I may die in battle. Hannibal and you, my King. The world shall know that you together stand above Alexander the Great." },
-      { kind: "dialogue", speaker: "Alexander", text: "Let the world know your station. With this it seems both my army and myself have run out of time. Thank you for giving us a true battle to end our history." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "...... he is gone. Turned to ashes....." },
-      { kind: "dialogue", speaker: "Hannibal the Great", text: "He traveled across time. He must have sacrificed his existence for just one battle... and I am afraid I would have done the same." },
-      { kind: "dialogue", speaker: "Hannibal the Great", text: "And you, Great King, how was your journey? Have you enjoyed this journey of global conquest? Are you satisfied, or do you wish for more battles?" },
-      { kind: "dialogue", speaker: "Hannibal the Great", text: "You fight just like Alexander the Great. That is perhaps your army now. Anyway, I will be taking my leave. That battle has revitalized my ambition for conquest. I will return to challenge you." },
-      { kind: "dialogue", speaker: "Hannibal the Great", text: "Until then, guard the throne of global conquest close to your heart, Great King. I will be back much sooner than four hundred years." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "Haha... some people just cannot live without this thrill..." },
-      { kind: "dialogue", speaker: "Lady Knight", text: "My liege, or I guess my King the Great. Congratulations on your conquest, and thank you. It was a joy to serve you." },
-    ],
-  },
+  id: 19,
+  type: "story",
+  title: "King the Great",
+  scenes: [
+    { kind: "dialogue", speaker: "Alexander", portrait: "alexander", background: "battlefieldDawn", text: "Ahahahaha, finally I may die in battle. Hannibal and you, my King. The world shall know that you together stand above Alexander the Great." },
+    { kind: "dialogue", speaker: "Alexander", portrait: "alexander", background: "battlefieldDawn", text: "Let the world know your station. With this it seems both my army and myself have run out of time. Thank you for giving us a true battle to end our history." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "...... he is gone. Turned to ashes....." },
+    { kind: "dialogue", speaker: "Hannibal the Great", portrait: "hannibal", background: "battlefieldDawn", text: "He traveled across time. He must have sacrificed his existence for just one battle... and I am afraid I would have done the same." },
+    { kind: "dialogue", speaker: "Hannibal the Great", portrait: "hannibal", background: "battlefieldDawn", text: "And you, Great King, how was your journey? Have you enjoyed this journey of global conquest? Are you satisfied, or do you wish for more battles?" },
+    { kind: "dialogue", speaker: "Hannibal the Great", portrait: "hannibal", background: "battlefieldDawn", text: "You fight just like Alexander the Great. That is perhaps your army now. Anyway, I will be taking my leave. That battle has revitalized my ambition for conquest. I will return to challenge you." },
+    { kind: "dialogue", speaker: "Hannibal the Great", portrait: "hannibal", background: "battlefieldDawn", text: "Until then, guard the throne of global conquest close to your heart, Great King. I will be back much sooner than four hundred years." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Haha... some people just cannot live without this thrill..." },
+    { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "My liege, or I guess my King the Great. Congratulations on your conquest, and thank you. It was a joy to serve you." },
+  ],
+},
   {
     id: 20,
     type: "story",
@@ -599,6 +618,22 @@ const TABLES = {
   r: ROOK_TABLE,
   q: QUEEN_TABLE,
   k: KING_TABLE_MID,
+};
+
+const PORTRAITS = {
+  brother: brotherPortrait,
+  ladyKnight: ladyKnightPortrait,
+  squireBoy: squireBoyPortrait,
+  hannibal: hannibalPortrait,
+  alexander: alexanderPortrait,
+  spartan: spartanPortrait,
+  romanLeftGeneral: romanLeftGeneralPortrait,
+  romanRightGeneral: romanRightGeneralPortrait,
+  persianImmortal: persianImmortalPortrait,
+  vikingChief: vikingChiefPortrait,
+  genghisKhan: genghisKhanPortrait,
+  shogun1: shogun1Portrait,
+  shogun2: shogun2Portrait,
 };
 
 function trimMap(map, max) {
@@ -4623,40 +4658,74 @@ if (mode === "campaign" && campaign) {
     }
 
     if (scene.kind === "map") {
-      return (
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-900 via-blue-800 to-indigo-950 p-8 text-white shadow-2xl min-h-[420px] flex flex-col justify-between">
-          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_20%_20%,white_0%,transparent_35%),radial-gradient(circle_at_80%_30%,white_0%,transparent_25%),radial-gradient(circle_at_50%_80%,white_0%,transparent_30%)]" />
+  return (
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-900 via-blue-800 to-indigo-950 p-8 text-white shadow-2xl min-h-[420px] flex flex-col justify-between">
+      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_20%_20%,white_0%,transparent_35%),radial-gradient(circle_at_80%_30%,white_0%,transparent_25%),radial-gradient(circle_at_50%_80%,white_0%,transparent_30%)]" />
 
-          <div className="relative">
-            <div className="text-xs uppercase tracking-[0.25em] text-sky-200 mb-2">
-              World Map Transition
-            </div>
-            <h2 className="text-4xl font-black tracking-wide">
-              {scene.title || "Map"}
-            </h2>
-          </div>
-
-          <div className="relative flex-1 flex items-center justify-center">
-            <div className="relative w-full max-w-2xl h-[220px] rounded-3xl border border-white/20 bg-white/10 backdrop-blur-sm overflow-hidden">
-              <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.02)_100%)]" />
-              <div className="absolute left-[10%] top-[55%] h-4 w-4 rounded-full bg-yellow-300 shadow-[0_0_18px_rgba(253,224,71,0.9)] animate-pulse" />
-              <div className="absolute left-[20%] top-[48%] w-[55%] h-1 rounded-full bg-gradient-to-r from-yellow-300 via-orange-300 to-red-300 animate-pulse" />
-              <div className="absolute right-[15%] top-[35%] h-5 w-5 rounded-full bg-red-400 shadow-[0_0_18px_rgba(248,113,113,0.9)] animate-bounce" />
-              <div className="absolute left-[18%] top-[50%] text-3xl animate-[ping_2.2s_infinite]">
-                ✦
-              </div>
-            </div>
-          </div>
-
-          <div className="relative rounded-2xl bg-black/25 border border-white/10 p-5 text-left">
-            <div className="text-lg font-semibold text-sky-100 mb-2">
-              {scene.title || "Travel"}
-            </div>
-            <div className="text-sky-50/95 leading-7">{scene.text}</div>
-          </div>
+      <div className="relative">
+        <div className="text-xs uppercase tracking-[0.25em] text-sky-200 mb-2">
+          World Map Transition
         </div>
-      );
-    }
+        <h2 className="text-4xl font-black tracking-wide">
+          {scene.title || "Map"}
+        </h2>
+      </div>
+
+      <div className="relative flex-1 flex items-center justify-center">
+        <div className="relative w-full max-w-3xl h-[300px] rounded-3xl overflow-hidden border border-white/20">
+          <img
+            src={worldMapImg}
+            alt="World Map"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+
+          {scene.route && (
+            <svg
+              className="absolute inset-0 w-full h-full pointer-events-none"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+            >
+              <line
+                x1={scene.route.from.x}
+                y1={scene.route.from.y}
+                x2={scene.route.to.x}
+                y2={scene.route.to.y}
+                stroke="#7f1d1d"
+                strokeWidth="0.7"
+                strokeLinecap="round"
+                pathLength="1"
+                strokeDasharray="1"
+                strokeDashoffset="1"
+                style={{ animation: "drawRoute 1.4s ease forwards" }}
+              />
+
+              <circle
+                cx={scene.route.from.x}
+                cy={scene.route.from.y}
+                r="1.2"
+                fill="#fde047"
+              />
+
+              <circle
+                cx={scene.route.to.x}
+                cy={scene.route.to.y}
+                r="1.4"
+                fill="#dc2626"
+              />
+            </svg>
+          )}
+        </div>
+      </div>
+
+      <div className="relative rounded-2xl bg-black/25 border border-white/10 p-5 text-left">
+        <div className="text-lg font-semibold text-sky-100 mb-2">
+          {scene.title || "Travel"}
+        </div>
+        <div className="text-sky-50/95 leading-7">{scene.text}</div>
+      </div>
+    </div>
+  );
+}
 
     if (scene.kind === "ending") {
       return (
@@ -4685,19 +4754,24 @@ if (mode === "campaign" && campaign) {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),transparent_45%)]" />
 
         <div className="relative flex-1 grid md:grid-cols-[240px_1fr] gap-6 items-center p-8">
-          <div className="h-[320px] rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center">
-            <div className="text-center px-6">
-              <div className="text-xs uppercase tracking-[0.3em] text-neutral-300 mb-3">
-                Portrait
-              </div>
-              <div className="text-2xl font-bold text-white">
-                {scene.portrait || "Narrator"}
-              </div>
-              <div className="mt-4 text-sm text-neutral-400">
-                PNG art goes here later
-              </div>
-            </div>
-          </div>
+          <div className="h-[320px] rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-sm flex items-center justify-center overflow-hidden">
+  {scene.portrait && PORTRAITS[scene.portrait] ? (
+    <img
+      src={PORTRAITS[scene.portrait]}
+      alt={scene.speaker || scene.portrait}
+      className="w-full h-full object-contain"
+    />
+  ) : (
+    <div className="text-center px-6">
+      <div className="text-xs uppercase tracking-[0.3em] text-neutral-300 mb-3">
+        Portrait
+      </div>
+      <div className="text-2xl font-bold text-white">
+        {scene.speaker || "Narrator"}
+      </div>
+    </div>
+  )}
+</div>
 
           <div className="rounded-[2rem] border border-white/10 bg-white/5 backdrop-blur-sm p-8">
             <div className="text-xs uppercase tracking-[0.3em] text-neutral-300 mb-3">
@@ -4720,6 +4794,17 @@ if (mode === "campaign" && campaign) {
       </div>
     );
   }
+
+<style>
+{`
+@keyframes drawLine {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+`}
+</style>
+
   return (
     <div className="min-h-screen bg-neutral-950 p-4 md:p-6">
       <div className="mx-auto max-w-5xl">
