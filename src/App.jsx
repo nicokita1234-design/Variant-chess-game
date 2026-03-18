@@ -49,6 +49,24 @@ const STRONG_AI_BASE_DEPTH = 4;
 const STRONG_AI_ENDGAME_DEPTH = 5;
 const STRONG_AI_MAX_ROOT = 14;
 
+const WEAK_AI_BASE_DEPTH = 2;
+const WEAK_AI_ENDGAME_DEPTH = 2;
+const WEAK_AI_MAX_ROOT = 6;
+
+function getAiSettings(aiDifficulty, isEndgame) {
+  if (aiDifficulty === "weak") {
+    return {
+      depth: isEndgame ? WEAK_AI_ENDGAME_DEPTH : WEAK_AI_BASE_DEPTH,
+      maxRoot: WEAK_AI_MAX_ROOT,
+    };
+  }
+
+  return {
+    depth: isEndgame ? STRONG_AI_ENDGAME_DEPTH : STRONG_AI_BASE_DEPTH,
+    maxRoot: STRONG_AI_MAX_ROOT,
+  };
+}
+
 const TT_MAX_SIZE = 30000;
 const LEGAL_CACHE_MAX = 16000;
 const EVAL_CACHE_MAX = 16000;
@@ -3700,6 +3718,7 @@ export default function PlayableChessGame() {
   const [variant, setVariant] = useState(null);
   const [game, setGame] = useState(createInitialState("normal"));
   const [playerColor, setPlayerColor] = useState(null);
+  const [aiDifficulty, setAiDifficulty] = useState("strong");
   const [mode, setMode] = useState(null);
   const [thinking, setThinking] = useState(false);
   const [thinkingLabel, setThinkingLabel] = useState("");
@@ -4924,26 +4943,55 @@ function applyOfficialResult(resultType, colorForStats = playerColor) {
           </div>
 
           <div className="flex flex-col gap-4">
-            <button
-              onClick={() => {
-                if (!variant) return;
-                startGame("w", "pvp");
-              }}
-              className={`px-6 py-4 rounded-2xl text-lg ${variant ? "bg-neutral-900 text-white" : "bg-neutral-300 text-neutral-500 cursor-not-allowed"}`}
-            >
-              Two Player (Control Both Sides)
-            </button>
+  <button
+    onClick={() => {
+      if (!variant) return;
+      startGame("w", "pvp");
+    }}
+    className={`px-6 py-4 rounded-2xl text-lg ${variant ? "bg-neutral-900 text-white" : "bg-neutral-300 text-neutral-500 cursor-not-allowed"}`}
+  >
+    Two Player (Control Both Sides)
+  </button>
 
-            <button
-              onClick={() => {
-                if (!variant) return;
-                setMode("ai_setup");
-                setPlayerColor(null);
-              }}
-              className={`px-6 py-4 rounded-2xl text-lg ${variant ? "bg-neutral-700 text-white" : "bg-neutral-300 text-neutral-500 cursor-not-allowed"}`}
-            >
-              Play vs Computer
-            </button>
+  <div className="rounded-2xl bg-neutral-100 p-4">
+    <div className="text-sm font-semibold text-neutral-700 mb-3">
+      Computer Difficulty
+    </div>
+    <div className="grid grid-cols-2 gap-3">
+      <button
+        onClick={() => setAiDifficulty("weak")}
+        className={`px-4 py-3 rounded-xl font-medium ${
+          aiDifficulty === "weak"
+            ? "bg-blue-600 text-white"
+            : "bg-white text-neutral-700 border border-neutral-300"
+        }`}
+      >
+        Weak AI
+      </button>
+
+      <button
+        onClick={() => setAiDifficulty("strong")}
+        className={`px-4 py-3 rounded-xl font-medium ${
+          aiDifficulty === "strong"
+            ? "bg-neutral-900 text-white"
+            : "bg-white text-neutral-700 border border-neutral-300"
+        }`}
+      >
+        Strong AI
+      </button>
+    </div>
+  </div>
+
+  <button
+    onClick={() => {
+      if (!variant) return;
+      setMode("ai_setup");
+      setPlayerColor(null);
+    }}
+    className={`px-6 py-4 rounded-2xl text-lg ${variant ? "bg-neutral-700 text-white" : "bg-neutral-300 text-neutral-500 cursor-not-allowed"}`}
+  >
+    Play vs Computer
+  </button>
 
             <div className="mt-8 border-t pt-6">
               <div className="text-lg font-semibold mb-3">Campaign</div>
@@ -5015,7 +5063,7 @@ function applyOfficialResult(resultType, colorForStats = playerColor) {
       </div>
     );
   }
-  
+
 if (mode === "campaign" && (campaign || campaignBadEnding)) {
  if (campaignBadEnding) {
   return (
