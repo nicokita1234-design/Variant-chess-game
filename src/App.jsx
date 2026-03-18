@@ -14,6 +14,14 @@ import genghisKhanPortrait from "./assets/portraits/genghisKhan.png";
 import shogun1Portrait from "./assets/portraits/shogun1.png";
 import shogun2Portrait from "./assets/portraits/shogun2.png";
 import worldMapImg from "./assets/maps/worldMap.png";
+import britainMap from "./assets/maps/britain.png";
+import scandinaviaMap from "./assets/maps/scandinavia.png";
+import steppeMap from "./assets/maps/steppe.png";
+import japanMap from "./assets/maps/japan.png";
+import greeceMap from "./assets/maps/greece.png";
+import persiaMap from "./assets/maps/persia.png";
+import romeMap from "./assets/maps/rome.png";
+import carthageMap from "./assets/maps/carthage.png";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const PIECES = {
@@ -45,12 +53,16 @@ const TT_MAX_SIZE = 30000;
 const LEGAL_CACHE_MAX = 16000;
 const EVAL_CACHE_MAX = 16000;
 const GLOBAL_CONQUEST_SAVE_KEY = "global_conquest_progress_v1";
+const ALEXANDER_UNLOCK_KEY = "global_conquest_alexander_unlocked_v1";
+
+const BENIN_UNLOCK_KEY = "benin_unlocked_v1";
+const MATCH_STATS_KEY = "match_stats_v1";
 
 const GLOBAL_TT = new Map();
 const LEGAL_CACHE = new Map();
 const EVAL_CACHE = new Map();
 
-const ARMY_OPTIONS = ["normal", "mongolian", "samurai", "spartan", "viking", "hannibal", "persian", "roman", "alexander"];
+const ARMY_OPTIONS = ["normal", "mongolian", "samurai", "spartan", "viking", "hannibal", "persian", "roman", "alexander", "benin"];
 
 const VARIANT_RULES = {
   normal: {
@@ -115,6 +127,19 @@ There is no Queen.
 The King moves like a Queen while remaining the royal piece.
 If the Alexander King is captured or checkmated, that side loses.`,
   },
+  benin: {
+  title: "Benin Chess",
+  text: `Standard chess setup.
+Special action: Fortify.
+
+Once on your turn, instead of moving, you may fortify a selected rook or queen.
+
+• Fortified rook: becomes permanently immovable and indestructible. Its square can never be moved onto.
+• Fortified queen: becomes permanently immovable and indestructible, and also locks the square above, below, left, and right of it.
+• Any piece on a locked square also becomes permanently immovable and indestructible.
+• A fortified queen may lock enemy pieces too.
+• Fortify fails if either king is inside the queen's area of effect.`,
+},
 };
 
 const GLOBAL_CONQUEST_CHAPTERS = [
@@ -181,13 +206,9 @@ const GLOBAL_CONQUEST_CHAPTERS = [
     },
     {
   kind: "map",
-  title: "Europe",
-  background: "worldMap",
-  text: "A local conflict begins in Europe.",
-  route: {
-    from: { x: 33, y: 33 },
-    to: { x: 42, y: 37 }
-  }
+  title: "Britain",
+  text: "A local conflict begins in Britain.",
+  mapImage: "britain"
 },
     {
       kind: "dialogue",
@@ -223,7 +244,7 @@ const GLOBAL_CONQUEST_CHAPTERS = [
     { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "throneRoom", text: "Wonderful. With this, let us face the world and tell them that the land of origin of chess is superior above all other nations." },
     { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "throneRoom", text: "Actually, chess originated in i..." },
     { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "throneRoom", text: "To the beach!" },
-    { kind: "map", title: "Northern Europe", background: "worldMap", text: "The march moves north toward the beaches of Europe." },
+    { kind: "map", title: "Northern Europe", text: "The march moves north toward the beaches of Europe.", mapImage: "scandinavia" },
     { kind: "dialogue", speaker: "Viking Commander", portrait: "vikingChief", background: "battlefieldDawn", text: "So you are the new King. I knew it was about time your father passed. With this we will once and for all get rid of you all!" },
   ],
 },
@@ -251,7 +272,7 @@ const GLOBAL_CONQUEST_CHAPTERS = [
     { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Who?" },
     { kind: "dialogue", speaker: "Viking Commander", portrait: "vikingChief", background: "battlefieldDawn", text: "We are the rulers of the sea, but they are the rulers of land. Vast empires stretching farther than our entire territory at sea." },
     { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "The Mongols live near where this boat is heading. So we should be careful." },
-    { kind: "map", title: "Asia", background: "worldMap", text: "The campaign leaves Europe and heads deep into Asia." },
+   { kind: "map", title: "Asia", text: "The campaign leaves Europe and heads deep into Asia.", mapImage: "steppe" },
     { kind: "dialogue", speaker: "Genghis Khan", portrait: "genghisKhan", background: "battlefieldDawn", text: "It has been a while since anyone dared invade our land. Least of all those wet seafarers. You have no place on land. Why even challenge us?" },
     { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Global conquest is ours. You are just a stepping stone." },
     { kind: "dialogue", speaker: "Genghis Khan", portrait: "genghisKhan", background: "battlefieldDawn", text: "Global conquest? Such a boring goal. Who has that much time to care about expansion and conquest? But I will crush you." },
@@ -278,7 +299,7 @@ const GLOBAL_CONQUEST_CHAPTERS = [
     { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "I have heard tales from merchants. Down south there is land where the world's biggest and most formidable armies have been locked in centuries of battle. If someone is to achieve global conquest, it is a path we cannot avoid." },
     { kind: "dialogue", speaker: "Genghis Khan", portrait: "genghisKhan", background: "battlefieldDawn", text: "Before that, would you avenge me with your might? There is an island east from here. On scrolls they are weak, pathetic, and without resources. But when we last invaded, a typhoon destroyed our army. They called it the divine wind." },
     { kind: "dialogue", speaker: "Genghis Khan", portrait: "genghisKhan", background: "battlefieldDawn", text: "Such a way of winning is shameful. They denied us our right to noble battle, and wrongfully took pride in it. If you wish to challenge the south, prove that you have the strength. Show that you will not lose your army to mere misfortune." },
-    { kind: "map", title: "Japan", background: "worldMap", text: "The route shifts east from mainland Asia to Japan." },
+    { kind: "map", title: "Japan", text: "The route shifts east from mainland Asia to Japan.", mapImage: "japan" },
     { kind: "dialogue", speaker: "Shogun", portrait: "shogun1", background: "battlefieldDawn", text: "They have returned yet again. No? Their leader is different from the last. Yet the outcome will be the same." },
     { kind: "dialogue", speaker: "Shogun", portrait: "shogun1", background: "battlefieldDawn", text: "Ready the army. Ready the typhoon. For honor we fight. Destroy them all, or disembowel!" },
   ],
@@ -301,7 +322,7 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   scenes: [
     { kind: "dialogue", speaker: "Shogun 2", portrait: "shogun2", background: "battlefieldDawn", text: "Congratulations, our King, for the noble battle. Unfortunately, we are unable to lend you that previous army, as they have all decided it was too shameful to live. Yet fear not. The rest of this land are willing to assist you. You are going south, yes?" },
     { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Yes. We will finally challenge the major leagues. Thank you for your assistance. Let us all head over and see what the land of war is truly like." },
-    { kind: "map", title: "Greece", background: "worldMap", text: "The campaign moves west toward Greece." },
+    { kind: "map", title: "Greece", text: "The campaign moves west toward Greece.", mapImage: "greece" },
     { kind: "dialogue", speaker: "Shogun 2", portrait: "shogun2", background: "battlefieldDawn", text: "I see. So these are the people of war. Like us, they are true warriors." },
     { kind: "dialogue", speaker: "Spartan", portrait: "spartan", background: "battlefieldDawn", text: "Those of the east have no right upon this sacred land. Head back now." },
     { kind: "dialogue", speaker: "Spartan", portrait: "spartan", background: "battlefieldDawn", text: "Especially those cowardly enough to rely on cavalry and archery." },
@@ -389,7 +410,7 @@ const GLOBAL_CONQUEST_CHAPTERS = [
     { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Then we take Rome." },
     { kind: "dialogue", speaker: "Persian Immortals", portrait: "persianImmortal", background: "battlefieldDawn", text: "Although our army has been destroyed, a new legion is coming here by tomorrow. You will have fresh troops to lead into victory." },
     { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Thank you." },
-    { kind: "map", title: "Rome", background: "worldMap", text: "The road turns west toward Rome." },
+   { kind: "map", title: "Rome", text: "The road turns west toward Rome.", mapImage: "rome" },
     { kind: "dialogue", speaker: "Roman General (Left)", portrait: "romanLeftGeneral", background: "battlefieldDawn", text: "One after the other!" },
     { kind: "dialogue", speaker: "Roman General (Right)", portrait: "romanRightGeneral", background: "battlefieldDawn", text: "They are foolish if they believe they can capture Rome even at its weakest!" },
     { kind: "dialogue", speaker: "Roman General (Left)", portrait: "romanLeftGeneral", background: "battlefieldDawn", text: "We shall crush this new King!" },
@@ -414,7 +435,7 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   scenes: [
     { kind: "dialogue", speaker: "Roman Generals", portrait: "romanLeftGeneral", background: "battlefieldDawn", text: "We accept. Not our defeat, but to lend our strength. From today on you are an honorary citizen of Rome, and in this time of crisis we elect you as Dictator." },
     { kind: "dialogue", speaker: "Roman Generals", portrait: "romanRightGeneral", background: "battlefieldDawn", text: "Lead all of the world, and let us once and for all defeat the General Hannibal of Carthage." },
-    { kind: "map", title: "Carthage", background: "worldMap", text: "The coalition marches from Rome to Carthage." },
+   { kind: "map", title: "Carthage", text: "The coalition marches from Rome to Carthage.", mapImage: "carthage" },
     { kind: "dialogue", speaker: "Hannibal", portrait: "hannibal", background: "battlefieldDawn", text: "It is a shame I still do not know your name. For even I can agree that you too are a great general. Someone who could perhaps challenge my seat as the conqueror of the globe." },
     { kind: "dialogue", speaker: "Squire Boy", portrait: "squireBoy", background: "battlefieldDawn", text: "This is it. This decides the greatest general of today." },
     { kind: "dialogue", speaker: "Lady Knight", portrait: "ladyKnight", background: "battlefieldDawn", text: "Let us win." },
@@ -470,15 +491,16 @@ const GLOBAL_CONQUEST_CHAPTERS = [
   ],
 },
   {
-    id: 18,
-    type: "battle",
-    title: "Final Battle",
-    missionName: "Alexander the Great",
-    whiteArmy: "hannibal",
-    blackArmy: "alexander",
-    variant: "worldwar",
-    playerColor: "w",
-  },
+  id: 18,
+  type: "battle",
+  title: "Final Battle",
+  missionName: "Alexander the Great",
+  whiteArmy: "hannibal",
+  blackArmy: "alexander",
+  variant: "worldwar",
+  playerColor: "w",
+  isAlexanderFinal: true,
+},
 
   {
   id: 19,
@@ -634,6 +656,17 @@ const PORTRAITS = {
   genghisKhan: genghisKhanPortrait,
   shogun1: shogun1Portrait,
   shogun2: shogun2Portrait,
+};
+
+const MAP_IMAGES = {
+  britain: britainMap,
+  scandinavia: scandinaviaMap,
+  steppe: steppeMap,
+  japan: japanMap,
+  greece: greeceMap,
+  persia: persiaMap,
+  rome: romeMap,
+  carthage: carthageMap,
 };
 
 function trimMap(map, max) {
@@ -881,6 +914,22 @@ function coordToAlg(r, c) {
   return `${FILES[c]}${8 - r}`;
 }
 
+function squareKey(r, c) {
+  return `${r},${c}`;
+}
+
+function isLockedSquare(state, r, c) {
+  return !!state.lockedSquares?.[squareKey(r, c)];
+}
+
+function isAttackBlockingSquare(state, r, c) {
+  return !!state && isLockedSquare(state, r, c);
+}
+
+function isFortifiedSquare(state, r, c) {
+  return !!state.fortifiedSquares?.[squareKey(r, c)];
+}
+
 function pieceClass(piece) {
   if (!piece) return "";
   return getColor(piece) === "w"
@@ -926,6 +975,8 @@ function variantLabelName(name) {
     ? "Random"
     : name === "alexander"
     ? "Alexander"
+    : name === "benin"
+? "Benin"
     : "Unknown";
 }
 
@@ -988,6 +1039,11 @@ function variantButtonClass(name, selected = false) {
         ? "bg-indigo-900 text-yellow-300 border-4 border-yellow-400"
         : "bg-indigo-900 text-yellow-300 border-4 border-yellow-400 opacity-40 saturate-50";
       break;
+      case "benin":
+  palette = selected
+    ? "bg-emerald-900 text-yellow-200 border-4 border-yellow-500"
+    : "bg-emerald-900 text-yellow-200 border-4 border-yellow-500 opacity-40 saturate-50";
+  break;
     case "globalconquest":
       palette = selected
         ? "bg-black text-yellow-300 border-4 border-yellow-500"
@@ -1003,8 +1059,14 @@ function variantButtonClass(name, selected = false) {
   return `px-4 py-2 rounded-xl font-medium transition-colors ${palette}`;
 }
 
-function pickRandomArmy() {
-  return ARMY_OPTIONS[Math.floor(Math.random() * ARMY_OPTIONS.length)];
+function pickRandomArmy(alexanderUnlocked = false, beninUnlocked = false) {
+  const pool = ARMY_OPTIONS.filter((army) => {
+    if (!alexanderUnlocked && army === "alexander") return false;
+    if (!beninUnlocked && army === "benin") return false;
+    return true;
+  });
+
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function getArmyStartLayout(army, color) {
@@ -1267,6 +1329,8 @@ function createInitialState(variant = "normal", whiteArmy = "normal", blackArmy 
     skippedTurns: [],
     positionHistory: [],
     positionCounts: {},
+    fortifiedSquares: {},
+lockedSquares: {},
   };
 
   const startHash = hashState(baseState);
@@ -1347,47 +1411,69 @@ for (const [dr, dc] of knightSteps) {
   const sliderMaxRange = activeArmy === "persian" ? 4 : 8;
 
   const bishopDirs = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
-  for (const [dr, dc] of bishopDirs) {
-    let r = row + dr;
-    let c = col + dc;
-    let steps = 0;
-    while (inBounds(r, c) && steps < sliderMaxRange) {
-      steps += 1;
+for (const [dr, dc] of bishopDirs) {
+  let r = row + dr;
+  let c = col + dc;
+  let steps = 0;
+  while (inBounds(r, c) && steps < sliderMaxRange) {
+    steps += 1;
+
+    if (isAttackBlockingSquare(state, r, c)) {
       const piece = board[r][c];
-      if (piece) {
-        if (getColor(piece) === byColor && ["b", "q"].includes(getType(piece))) return true;
-        break;
+      if (piece && getColor(piece) === byColor && ["b", "q"].includes(getType(piece))) {
+        return true;
       }
-      r += dr;
-      c += dc;
+      break;
     }
+
+    const piece = board[r][c];
+    if (piece) {
+      if (getColor(piece) === byColor && ["b", "q"].includes(getType(piece))) return true;
+      break;
+    }
+
+    r += dr;
+    c += dc;
   }
+}
 
   const rookDirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-  for (const [dr, dc] of rookDirs) {
-    let r = row + dr;
-    let c = col + dc;
-    const isVikingVerticalLine = activeArmy === "viking" && dc === 0;
-    let steps = 0;
-    while (inBounds(r, c) && steps < sliderMaxRange) {
-      steps += 1;
+for (const [dr, dc] of rookDirs) {
+  let r = row + dr;
+  let c = col + dc;
+  const isVikingVerticalLine = activeArmy === "viking" && dc === 0;
+  let steps = 0;
+
+  while (inBounds(r, c) && steps < sliderMaxRange) {
+    steps += 1;
+
+    if (isAttackBlockingSquare(state, r, c)) {
       const piece = board[r][c];
-      if (piece) {
-        if (getColor(piece) === byColor) {
-          const type = getType(piece);
-          if (["r", "q"].includes(type)) return true;
-          if (isVikingVerticalLine) {
-            r += dr;
-            c += dc;
-            continue;
-          }
-        }
-        break;
+      if (piece && getColor(piece) === byColor) {
+        const type = getType(piece);
+        if (["r", "q"].includes(type)) return true;
       }
-      r += dr;
-      c += dc;
+      break;
     }
+
+    const piece = board[r][c];
+    if (piece) {
+      if (getColor(piece) === byColor) {
+        const type = getType(piece);
+        if (["r", "q"].includes(type)) return true;
+        if (isVikingVerticalLine) {
+          r += dr;
+          c += dc;
+          continue;
+        }
+      }
+      break;
+    }
+
+    r += dr;
+    c += dc;
   }
+}
 
 for (let dr = -1; dr <= 1; dr++) {
   for (let dc = -1; dc <= 1; dc++) {
@@ -1418,6 +1504,8 @@ function generatePseudoMoves(state, row, col) {
   const type = getType(piece);
   const moves = [];
 
+  if (isLockedSquare(state, row, col)) return [];
+
   if (type === "p") {
     const dir = color === "w" ? -1 : 1;
     const startRow = color === "w" ? 6 : 1;
@@ -1434,7 +1522,7 @@ function generatePseudoMoves(state, row, col) {
           moves.push({ from: [row, col], to: [row, sideCol], capture: true });
         }
       }
-      return moves;
+      return moves.filter((move) => !isLockedSquare(state, move.to[0], move.to[1]));
     }
 
     if (movingArmy === "hannibal") {
@@ -1462,7 +1550,7 @@ function generatePseudoMoves(state, row, col) {
           moves.push({ from: [row, col], to: [oneForward, nc], enPassant: true, capture: true });
         }
       }
-      return moves;
+      return moves.filter((move) => !isLockedSquare(state, move.to[0], move.to[1]));
     }
 
 const oneStep = row + dir;
@@ -1487,7 +1575,7 @@ if (inBounds(oneStep, col) && !board[oneStep][col]) {
         moves.push({ from: [row, col], to: [nr, nc], enPassant: true, capture: true });
       }
     }
-    return moves;
+    return moves.filter((move) => !isLockedSquare(state, move.to[0], move.to[1]));
   }
 
   if (type === "n") {
@@ -1500,7 +1588,7 @@ if (inBounds(oneStep, col) && !board[oneStep][col]) {
       if (!target || getColor(target) !== color) moves.push({ from: [row, col], to: [nr, nc], capture: !!target });
     }
 
-    return moves;
+    return moves.filter((move) => !isLockedSquare(state, move.to[0], move.to[1]));
   }
 
   if (["b", "r", "q"].includes(type)) {
@@ -1544,7 +1632,7 @@ while (inBounds(nr, nc) && steps < directionMaxRange) {
         nc += dc;
       }
     }
-    return moves;
+    return moves.filter((move) => !isLockedSquare(state, move.to[0], move.to[1]));
   }
 
 if (type === "k") {
@@ -1594,10 +1682,14 @@ if (type === "k") {
     }
   }
 
-  const homeRow = color === "w" ? 7 : 0;
-  const canConsiderCastling = movingArmy === "roman"
-    ? row === homeRow && col === 4
-    : (!isInCheck(board, color, state.variant, state) && row === homeRow && col === 4);
+ const homeRow = color === "w" ? 7 : 0;
+const canCastleThisArmy = movingArmy !== "benin";
+
+const canConsiderCastling = !canCastleThisArmy
+  ? false
+  : movingArmy === "roman"
+  ? row === homeRow && col === 4
+  : (!isInCheck(board, color, state.variant, state) && row === homeRow && col === 4);
 
   if (canConsiderCastling) {
     if (
@@ -1621,7 +1713,7 @@ if (type === "k") {
     }
   }
 
-    return moves;
+    return moves.filter((move) => !isLockedSquare(state, move.to[0], move.to[1]));
   }
 }
 
@@ -1653,6 +1745,61 @@ function applyPendingSkips(state) {
   };
 }
 
+function applyBeninFortify(state, from) {
+  const board = cloneBoard(state.board);
+  const piece = board[from[0]][from[1]];
+  if (!piece) return state;
+
+  const color = getColor(piece);
+  const type = getType(piece);
+  const army = variantForColor(state, color);
+
+  if (army !== "benin") return state;
+  if (type !== "r" && type !== "q") return state;
+  if (isLockedSquare(state, from[0], from[1])) return state;
+
+  const fortifiedSquares = { ...(state.fortifiedSquares || {}) };
+  const lockedSquares = { ...(state.lockedSquares || {}) };
+
+  const affected = [[from[0], from[1]]];
+
+  if (type === "q") {
+    affected.push(
+      [from[0] - 1, from[1]],
+      [from[0] + 1, from[1]],
+      [from[0], from[1] - 1],
+      [from[0], from[1] + 1]
+    );
+  }
+
+  const validAffected = affected.filter(([r, c]) => inBounds(r, c));
+
+  if (type === "q") {
+    for (const [r, c] of validAffected) {
+      const target = board[r][c];
+      if (target && getType(target) === "k") {
+        return state;
+      }
+    }
+  }
+
+  for (const [r, c] of validAffected) {
+    fortifiedSquares[squareKey(r, c)] = true;
+    lockedSquares[squareKey(r, c)] = true;
+  }
+
+  return {
+    ...state,
+    board,
+    fortifiedSquares,
+    lockedSquares,
+    turn: other(state.turn),
+    selected: null,
+    legalMoves: [],
+    enPassant: null,
+  };
+}
+
 function applyMoveToState(state, move, promotionChoice = "q") {
   const board = cloneBoard(state.board);
   const reserve = {
@@ -1670,6 +1817,9 @@ function applyMoveToState(state, move, promotionChoice = "q") {
   const color = getColor(piece);
   const type = getType(piece);
   const originalTarget = board[tr][tc];
+  if (!move.resurrect && !move.sacrifice && isLockedSquare(state, tr, tc)) {
+  return state;
+}
 
   const newCastling = {
     w: { ...state.castling.w },
@@ -3567,6 +3717,12 @@ export default function PlayableChessGame() {
   const [worldWarSetup, setWorldWarSetup] = useState(null);
 const [campaign, setCampaign] = useState(null);
 const [campaignSceneIndex, setCampaignSceneIndex] = useState(0);
+const [alexanderRematchArmy, setAlexanderRematchArmy] = useState("hannibal");
+const [campaignBadEnding, setCampaignBadEnding] = useState(false);
+const [matchStats, setMatchStats] = useState(() => loadMatchStats());
+const [beninUnlocked, setBeninUnlocked] = useState(() => loadBeninUnlock());
+const [recordedGameResultKey, setRecordedGameResultKey] = useState(null);
+const [alexanderUnlocked, setAlexanderUnlocked] = useState(loadAlexanderUnlock());
 
   const aiTimerRef = useRef(null);
   const aiSearchTokenRef = useRef(0);
@@ -3592,7 +3748,7 @@ useEffect(() => {
 
 useEffect(() => {
   const validModes = ["pvp", "ai", "ai_setup", "campaign"];
-  const validVariants = ["normal", "mongolian", "samurai", "spartan", "viking", "hannibal", "persian", "roman", "alexander", "worldwar"];
+  const validVariants = ["normal", "mongolian", "samurai", "spartan", "viking", "hannibal", "persian", "roman", "alexander", "benin", "worldwar"];
   const invalidMode = mode && !validModes.includes(mode);
   const invalidVariant = variant !== null && !validVariants.includes(variant);
   const stuckWithoutVariant = mode && mode !== "campaign" && !variant && !worldWarSetup && !hannibalSetup;
@@ -3622,10 +3778,12 @@ useEffect(() => {
     setEndOverlay(null);
     setSkipOverlay(null);
     setResurrectionOverlay(null);
+    setRecordedGameResultKey(null);
     setPendingPromotion(null);
     setCampaign(null);
-    clearEngineCaches();
-    setGame(createInitialState("normal"));
+setCampaignBadEnding(false);
+clearEngineCaches();
+setGame(createInitialState("normal"));
   }
 }, [mode, variant, worldWarSetup, hannibalSetup, game]);
 
@@ -3676,6 +3834,7 @@ useEffect(() => {
       setResurrectionOverlay(null);
       setKatanaEffect(null);
       setLastMove(null);
+      setRecordedGameResultKey(null);
 
       setCampaign(updatedCampaign);
       setMode("campaign");
@@ -3702,6 +3861,40 @@ useEffect(() => {
   }
 
   if (playerLost) {
+    const activeChapter = campaign.chapters[campaign.chapterIndex];
+
+    if (activeChapter?.isAlexanderFinal) {
+      const updatedCampaign = {
+        ...campaign,
+        inBattle: false,
+        activeBattleChapterId: null,
+        alexanderRematchUnlocked: true,
+      };
+
+      saveCampaignProgress(updatedCampaign);
+
+      setTimeout(() => {
+        setEndOverlay(null);
+        setSkipOverlay(null);
+        setResurrectionOverlay(null);
+        setKatanaEffect(null);
+        setLastMove(null);
+        setRecordedGameResultKey(null);
+
+        setCampaign(updatedCampaign);
+        setMode("campaign");
+        setVariant(null);
+        setPlayerColor("w");
+        setWorldWarSetup(null);
+        setHannibalSetup(null);
+        setSelectedReserve(null);
+        setPendingPromotion(null);
+        setGame(createInitialState("normal"));
+      }, 1400);
+
+      return;
+    }
+
     clearCampaignProgress();
 
     setTimeout(() => {
@@ -3710,9 +3903,10 @@ useEffect(() => {
       setResurrectionOverlay(null);
       setKatanaEffect(null);
       setLastMove(null);
+      setRecordedGameResultKey(null);
 
-      setCampaign(null);
-      setMode(null);
+      setCampaignBadEnding(true);
+      setMode("campaign");
       setVariant(null);
       setPlayerColor(null);
       setWorldWarSetup(null);
@@ -3723,6 +3917,58 @@ useEffect(() => {
     }, 1600);
   }
 }, [game.gameOver, game.status, campaign, mode, playerColor]);
+
+useEffect(() => {
+  if (!game.gameOver) return;
+  if (mode !== "ai") return;
+  if (!playerColor) return;
+
+  const status = game.status || "";
+  let resultType = null;
+
+  const playerWon =
+    (playerColor === "w" && status.includes("White wins")) ||
+    (playerColor === "b" && status.includes("Black wins"));
+
+  const playerLost =
+    (playerColor === "w" && status.includes("Black wins")) ||
+    (playerColor === "b" && status.includes("White wins"));
+
+  const isDraw =
+    status.includes("Stalemate") ||
+    status.includes("Draw") ||
+    status.includes("insufficient material");
+
+  if (playerWon) resultType = "win";
+  else if (playerLost) resultType = "loss";
+  else if (isDraw) resultType = "draw";
+  else return;
+
+  const gameResultKey = `${status}|${playerColor}|${game.moveHistory.length}`;
+
+  if (recordedGameResultKey === gameResultKey) return;
+
+  applyOfficialResult(resultType, playerColor);
+  setRecordedGameResultKey(gameResultKey);
+}, [
+  game.gameOver,
+  game.status,
+  game.moveHistory.length,
+  mode,
+  playerColor,
+  recordedGameResultKey,
+  beninUnlocked,
+]);
+
+useEffect(() => {
+  saveMatchStats(matchStats);
+}, [matchStats]);
+
+useEffect(() => {
+  if (beninUnlocked) {
+    saveBeninUnlock();
+  }
+}, [beninUnlocked]);
 
   const gameSummary = useMemo(() => {
     const legal = allLegalMoves(game);
@@ -3758,20 +4004,25 @@ useEffect(() => {
     }
     setThinking(false);
     setThinkingLabel("");
+    setRecordedGameResultKey(null);
   }
 
   function startFreshCampaign() {
   cancelAiThinking();
   clearEngineCaches();
+  setAlexanderRematchArmy("hannibal");
+  setCampaignBadEnding(false);
+  setRecordedGameResultKey(null);
 
   const freshCampaign = {
-    chapterIndex: 0,
-    chapters: GLOBAL_CONQUEST_CHAPTERS,
-    completed: [],
-    inBattle: false,
-    activeBattleChapterId: null,
-    lastCompletedChapterIndex: -1,
-  };
+  chapterIndex: 0,
+  chapters: GLOBAL_CONQUEST_CHAPTERS,
+  completed: [],
+  inBattle: false,
+  activeBattleChapterId: null,
+  lastCompletedChapterIndex: -1,
+  alexanderRematchUnlocked: false,
+};
 
   clearCampaignProgress();
   saveCampaignProgress(freshCampaign);
@@ -3796,6 +4047,9 @@ useEffect(() => {
 function continueSavedCampaign() {
   const saved = loadCampaignProgress();
   if (!saved) return;
+setAlexanderRematchArmy("hannibal");
+setCampaignBadEnding(false);
+setRecordedGameResultKey(null);
 
   cancelAiThinking();
   clearEngineCaches();
@@ -3822,6 +4076,7 @@ function startCampaignBattle(chapter) {
 
   cancelAiThinking();
   clearEngineCaches();
+  setCampaignBadEnding(false);
 
   const updatedCampaign = {
     ...campaign,
@@ -4278,8 +4533,13 @@ setGame((prev) => {
   function confirmWorldWarSetup() {
     if (!worldWarSetup) return;
 
-    const resolvedWhiteArmy = worldWarSetup.whiteArmy === "random" ? pickRandomArmy() : worldWarSetup.whiteArmy;
-    const resolvedBlackArmy = worldWarSetup.blackArmy === "random" ? pickRandomArmy() : worldWarSetup.blackArmy;
+    const resolvedWhiteArmy = worldWarSetup.whiteArmy === "random"
+  ? pickRandomArmy(alexanderUnlocked, beninUnlocked)
+  : worldWarSetup.whiteArmy;
+
+const resolvedBlackArmy = worldWarSetup.blackArmy === "random"
+  ? pickRandomArmy(alexanderUnlocked, beninUnlocked)
+  : worldWarSetup.blackArmy;
 
     const needsWhiteHannibal = resolvedWhiteArmy === "hannibal";
     const needsBlackHannibal = resolvedBlackArmy === "hannibal";
@@ -4385,6 +4645,22 @@ function saveCampaignProgress(campaignData) {
   }
 }
 
+function recordMatchResult(stats, playerColor, resultType) {
+  const next = { ...stats };
+
+  if (playerColor === "w") {
+    if (resultType === "win") next.whiteWins += 1;
+    if (resultType === "loss") next.whiteLosses += 1;
+    if (resultType === "draw") next.whiteDraws += 1;
+  } else if (playerColor === "b") {
+    if (resultType === "win") next.blackWins += 1;
+    if (resultType === "loss") next.blackLosses += 1;
+    if (resultType === "draw") next.blackDraws += 1;
+  }
+
+  return next;
+}
+
 function loadCampaignProgress() {
   try {
     const raw = localStorage.getItem(GLOBAL_CONQUEST_SAVE_KEY);
@@ -4401,6 +4677,75 @@ function clearCampaignProgress() {
     localStorage.removeItem(GLOBAL_CONQUEST_SAVE_KEY);
   } catch (error) {
     console.error("Failed to clear campaign progress:", error);
+  }
+}
+
+function loadMatchStats() {
+  try {
+    const raw = localStorage.getItem(MATCH_STATS_KEY);
+    if (!raw) {
+      return {
+        whiteWins: 0,
+        whiteLosses: 0,
+        whiteDraws: 0,
+        blackWins: 0,
+        blackLosses: 0,
+        blackDraws: 0,
+      };
+    }
+    return JSON.parse(raw);
+  } catch (error) {
+    console.error("Failed to load match stats:", error);
+    return {
+      whiteWins: 0,
+      whiteLosses: 0,
+      whiteDraws: 0,
+      blackWins: 0,
+      blackLosses: 0,
+      blackDraws: 0,
+    };
+  }
+}
+
+function saveMatchStats(stats) {
+  try {
+    localStorage.setItem(MATCH_STATS_KEY, JSON.stringify(stats));
+  } catch (error) {
+    console.error("Failed to save match stats:", error);
+  }
+}
+
+function loadBeninUnlock() {
+  try {
+    return localStorage.getItem(BENIN_UNLOCK_KEY) === "true";
+  } catch (error) {
+    console.error("Failed to load Benin unlock:", error);
+    return false;
+  }
+}
+
+function saveBeninUnlock() {
+  try {
+    localStorage.setItem(BENIN_UNLOCK_KEY, "true");
+  } catch (error) {
+    console.error("Failed to save Benin unlock:", error);
+  }
+}
+
+function saveAlexanderUnlock() {
+  try {
+    localStorage.setItem(ALEXANDER_UNLOCK_KEY, "true");
+  } catch (error) {
+    console.error("Failed to save Alexander unlock:", error);
+  }
+}
+
+function loadAlexanderUnlock() {
+  try {
+    return localStorage.getItem(ALEXANDER_UNLOCK_KEY) === "true";
+  } catch (error) {
+    console.error("Failed to load Alexander unlock:", error);
+    return false;
   }
 }
 
@@ -4426,6 +4771,10 @@ function clearCampaignProgress() {
     if (!lastMove) return false;
     return lastMove.to[0] === r && lastMove.to[1] === c;
   }
+
+function isLockedBoardSquare(r, c) {
+  return isLockedSquare(game, r, c);
+}
 
   function isKatanaRemovedSquare(r, c) {
     if (!katanaEffect) return false;
@@ -4482,40 +4831,64 @@ function clearCampaignProgress() {
     };
   }, [game, mode, playerColor, hannibalSetup, worldWarSetup, pendingPromotion]);
 
-    function triggerDevResult(resultType) {
-    if (mode !== "ai" && mode !== "pvp") return;
-    if (hannibalSetup || worldWarSetup || pendingPromotion) return;
+function applyOfficialResult(resultType, colorForStats = playerColor) {
+  if (!colorForStats) return;
 
-    cancelAiThinking();
+  setMatchStats((prev) => {
+    const updated = recordMatchResult(prev, colorForStats, resultType);
 
-    let status = "Draw.";
-    let overlayKind = "draw";
-
-    if (resultType === "win") {
-      status = playerColor === "b" ? "Black wins." : "White wins.";
-      overlayKind = "victory";
-    } else if (resultType === "loss") {
-      status = playerColor === "b" ? "White wins." : "Black wins.";
-      overlayKind = "victory";
-    } else if (resultType === "draw") {
-      status = "Draw.";
-      overlayKind = "draw";
+    if (!beninUnlocked && updated.blackWins >= 50) {
+      setBeninUnlocked(true);
+      saveBeninUnlock();
     }
 
-    setGame((prev) => ({
-      ...prev,
-      gameOver: true,
-      status,
-      selected: null,
-      legalMoves: [],
-    }));
+    return updated;
+  });
+}
 
-    setEndOverlay({
-      kind: overlayKind,
-      message: status,
-      triggeredAt: Date.now(),
-    });
+    function triggerDevResult(resultType) {
+  if (mode !== "ai" && mode !== "pvp") return;
+  if (hannibalSetup || worldWarSetup || pendingPromotion) return;
+  if (!playerColor) return;
+
+  cancelAiThinking();
+
+  let status = "Draw.";
+  let overlayKind = "draw";
+  let officialResultType = "draw";
+
+  if (resultType === "win") {
+    status = playerColor === "b" ? "Black wins." : "White wins.";
+    overlayKind = "victory";
+    officialResultType = "win";
+  } else if (resultType === "loss") {
+    status = playerColor === "b" ? "White wins." : "Black wins.";
+    overlayKind = "victory";
+    officialResultType = "loss";
+  } else if (resultType === "draw") {
+    status = "Draw.";
+    overlayKind = "draw";
+    officialResultType = "draw";
   }
+
+  const gameResultKey = `${status}|${playerColor}|${game.moveHistory.length}`;
+  applyOfficialResult(officialResultType, playerColor);
+  setRecordedGameResultKey(gameResultKey);
+
+  setGame((prev) => ({
+    ...prev,
+    gameOver: true,
+    status,
+    selected: null,
+    legalMoves: [],
+  }));
+
+  setEndOverlay({
+    kind: overlayKind,
+    message: status,
+    triggeredAt: Date.now(),
+  });
+}
 
      if (!mode) {
     const savedCampaign = loadCampaignProgress();
@@ -4536,7 +4909,16 @@ function clearCampaignProgress() {
               <button onClick={() => setVariant("hannibal")} className={variantButtonClass("hannibal", variant === "hannibal")}>Hannibal Chess</button>
               <button onClick={() => setVariant("persian")} className={variantButtonClass("persian", variant === "persian")}>Persian Immortal Chess</button>
               <button onClick={() => setVariant("roman")} className={variantButtonClass("roman", variant === "roman")}>Roman Chess</button>
-              <button onClick={() => setVariant("alexander")} className={variantButtonClass("alexander", variant === "alexander")}>Alexander Chess</button>
+              {alexanderUnlocked && (
+  <button onClick={() => setVariant("alexander")} className={variantButtonClass("alexander", variant === "alexander")}>
+    Alexander Chess
+  </button>
+)}
+{beninUnlocked && (
+  <button onClick={() => setVariant("benin")} className={variantButtonClass("benin", variant === "benin")}>
+    Benin Chess
+  </button>
+)}
               <button onClick={() => setVariant("worldwar")} className={variantButtonClass("worldwar", variant === "worldwar")}>World War</button>
             </div>
           </div>
@@ -4600,14 +4982,104 @@ function clearCampaignProgress() {
                 </div>
               )}
             </div>
+           <div className="mt-8 border-t pt-6">
+  <div className="text-lg font-semibold mb-3">Match Record</div>
+
+  <div className="grid grid-cols-2 gap-4 text-sm">
+    <div className="rounded-2xl bg-neutral-100 p-4 text-left">
+      <div className="font-bold text-neutral-900 mb-2">As White</div>
+      <div>Wins: {matchStats.whiteWins}</div>
+      <div>Losses: {matchStats.whiteLosses}</div>
+      <div>Draws: {matchStats.whiteDraws}</div>
+    </div>
+
+    <div className="rounded-2xl bg-neutral-100 p-4 text-left">
+      <div className="font-bold text-neutral-900 mb-2">As Black</div>
+      <div>Wins: {matchStats.blackWins}</div>
+      <div>Losses: {matchStats.blackLosses}</div>
+      <div>Draws: {matchStats.blackDraws}</div>
+    </div>
+  </div>
+
+  {beninUnlocked && (
+    <div className="mt-4 rounded-2xl bg-neutral-100 p-4 text-sm text-neutral-700">
+      <div className="font-semibold text-neutral-900">Benin Chess Unlocked</div>
+      <div className="mt-1">
+        An ancient defensive doctrine has been discovered.
+      </div>
+    </div>
+  )}
+</div>
           </div>
         </div>
       </div>
     );
   }
+  
+if (mode === "campaign" && (campaign || campaignBadEnding)) {
+ if (campaignBadEnding) {
+  return (
+    <div className="min-h-screen bg-neutral-950 p-4 md:p-6 flex items-center justify-center relative z-[100]">
+      <div className="mx-auto max-w-4xl w-full">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-black via-neutral-900 to-red-950 p-10 text-center text-white shadow-2xl min-h-[520px] flex flex-col items-center justify-center">
+          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,white_0%,transparent_55%)] pointer-events-none" />
 
-if (mode === "campaign" && campaign) {
+          <div className="relative text-xs uppercase tracking-[0.35em] text-red-300 mb-4">
+            Bad Ending
+          </div>
+
+          <div className="relative whitespace-pre-line text-3xl md:text-5xl font-black tracking-wide leading-tight">
+            The King's great ambition
+            {"\n"}has led to his death.
+          </div>
+
+          <div className="relative mt-8 max-w-2xl text-base md:text-xl leading-8 text-neutral-200 whitespace-pre-line">
+            Captured in combat and executed later.
+
+            Although his achievements were magnanimous, he will never be known as the Great.
+
+            Nor will anyone remember his name.
+
+            Not even you.
+          </div>
+
+          <div className="mt-10 relative z-[101] pointer-events-auto">
+            <button
+              onClick={() => {
+                cancelAiThinking();
+                setCampaignBadEnding(false);
+                setCampaign(null);
+                setCampaignSceneIndex(0);
+                setMode(null);
+                setPlayerColor(null);
+                setVariant(null);
+                setWorldWarSetup(null);
+                setHannibalSetup(null);
+                setHannibalSelectedSlot(null);
+                setSelectedReserve(null);
+                setPendingPromotion(null);
+                setLastMove(null);
+                setKatanaEffect(null);
+                setEndOverlay(null);
+                setSkipOverlay(null);
+                setResurrectionOverlay(null);
+                clearEngineCaches();
+                setGame(createInitialState("normal"));
+              }}
+              className="px-6 py-3 rounded-2xl bg-red-700 text-white font-bold shadow-lg hover:bg-red-600"
+            >
+              Return to Menu
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
   const currentChapter = campaign.chapters[campaign.chapterIndex];
+  const showAlexanderRematch =
+  campaign.alexanderRematchUnlocked &&
+  currentChapter?.isAlexanderFinal;
   const chapterScenes = currentChapter.scenes || [];
   const currentScene =
     currentChapter.type === "story" ? chapterScenes[campaignSceneIndex] : null;
@@ -4633,20 +5105,31 @@ if (mode === "campaign" && campaign) {
     setSkipOverlay(null);
     setResurrectionOverlay(null);
     setGame(createInitialState("normal"));
+    setAlexanderRematchArmy("hannibal");
+    setCampaignBadEnding(false);
+    setRecordedGameResultKey(null);
   }
 
-  function goToNextCampaignChapter() {
-    const nextIndex = campaign.chapterIndex + 1;
-    if (nextIndex < campaign.chapters.length) {
-      const updatedCampaign = {
-        ...campaign,
-        chapterIndex: nextIndex,
-      };
-      setCampaign(updatedCampaign);
-      setCampaignSceneIndex(0);
-      saveCampaignProgress(updatedCampaign);
+function goToNextCampaignChapter() {
+  const nextIndex = campaign.chapterIndex + 1;
+
+  if (nextIndex < campaign.chapters.length) {
+    const updatedCampaign = {
+      ...campaign,
+      chapterIndex: nextIndex,
+    };
+
+    setCampaign(updatedCampaign);
+    setCampaignSceneIndex(0);
+    saveCampaignProgress(updatedCampaign);
+
+    const nextChapter = campaign.chapters[nextIndex];
+    if (nextChapter?.title === "Credits") {
+      saveAlexanderUnlock();
+      setAlexanderUnlocked(true);
     }
   }
+}
 
   function renderStoryScene(scene) {
     if (!scene) {
@@ -4658,13 +5141,15 @@ if (mode === "campaign" && campaign) {
     }
 
     if (scene.kind === "map") {
+  const mapSrc = scene.mapImage ? MAP_IMAGES[scene.mapImage] : null;
+
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-900 via-blue-800 to-indigo-950 p-8 text-white shadow-2xl min-h-[420px] flex flex-col justify-between">
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-stone-900 via-amber-950 to-black p-8 text-white shadow-2xl min-h-[420px] flex flex-col justify-between">
       <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_20%_20%,white_0%,transparent_35%),radial-gradient(circle_at_80%_30%,white_0%,transparent_25%),radial-gradient(circle_at_50%_80%,white_0%,transparent_30%)]" />
 
       <div className="relative">
-        <div className="text-xs uppercase tracking-[0.25em] text-sky-200 mb-2">
-          World Map Transition
+        <div className="text-xs uppercase tracking-[0.25em] text-amber-200 mb-2">
+          Campaign Map
         </div>
         <h2 className="text-4xl font-black tracking-wide">
           {scene.title || "Map"}
@@ -4672,56 +5157,28 @@ if (mode === "campaign" && campaign) {
       </div>
 
       <div className="relative flex-1 flex items-center justify-center">
-        <div className="relative w-full max-w-3xl h-[300px] rounded-3xl overflow-hidden border border-white/20">
-          <img
-            src={worldMapImg}
-            alt="World Map"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-
-          {scene.route && (
-            <svg
-              className="absolute inset-0 w-full h-full pointer-events-none"
-              viewBox="0 0 100 100"
-              preserveAspectRatio="none"
-            >
-              <line
-                x1={scene.route.from.x}
-                y1={scene.route.from.y}
-                x2={scene.route.to.x}
-                y2={scene.route.to.y}
-                stroke="#7f1d1d"
-                strokeWidth="0.7"
-                strokeLinecap="round"
-                pathLength="1"
-                strokeDasharray="1"
-                strokeDashoffset="1"
-                style={{ animation: "drawRoute 1.4s ease forwards" }}
-              />
-
-              <circle
-                cx={scene.route.from.x}
-                cy={scene.route.from.y}
-                r="1.2"
-                fill="#fde047"
-              />
-
-              <circle
-                cx={scene.route.to.x}
-                cy={scene.route.to.y}
-                r="1.4"
-                fill="#dc2626"
-              />
-            </svg>
+        <div className="relative w-full max-w-3xl h-[300px] rounded-3xl overflow-hidden border border-white/20 bg-amber-100/80">
+          {mapSrc ? (
+            <img
+              src={mapSrc}
+              alt={scene.title || "Map"}
+              className="absolute inset-0 w-full h-full object-contain"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-neutral-300">
+              No map image assigned
+            </div>
           )}
+
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         </div>
       </div>
 
       <div className="relative rounded-2xl bg-black/25 border border-white/10 p-5 text-left">
-        <div className="text-lg font-semibold text-sky-100 mb-2">
+        <div className="text-lg font-semibold text-amber-100 mb-2">
           {scene.title || "Travel"}
         </div>
-        <div className="text-sky-50/95 leading-7">{scene.text}</div>
+        <div className="text-stone-100 leading-7">{scene.text}</div>
       </div>
     </div>
   );
@@ -4795,16 +5252,6 @@ if (mode === "campaign" && campaign) {
     );
   }
 
-<style>
-{`
-@keyframes drawLine {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-`}
-</style>
-
   return (
     <div className="min-h-screen bg-neutral-950 p-4 md:p-6">
       <div className="mx-auto max-w-5xl">
@@ -4835,7 +5282,83 @@ if (mode === "campaign" && campaign) {
           </div>
         </div>
 
-        {currentChapter.type === "story" ? (
+        {showAlexanderRematch ? (
+  <>
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-950 via-neutral-900 to-black p-8 text-white shadow-2xl min-h-[420px] flex flex-col justify-between">
+      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,white_0%,transparent_55%)]" />
+
+      <div className="relative">
+        <div className="text-xs uppercase tracking-[0.25em] text-indigo-200 mb-2">
+          Final Chance
+        </div>
+        <h2 className="text-4xl font-black tracking-wide">
+          Challenge Alexander Again
+        </h2>
+      </div>
+
+      <div className="relative rounded-2xl bg-white/5 border border-white/10 p-5 text-left">
+        <div className="text-lg font-semibold text-indigo-100 mb-2">
+          Hannibal has fallen
+        </div>
+        <div className="text-neutral-200 leading-7">
+          You were defeated in the clash against Alexander. But the campaign is not over yet.
+          You may challenge him again, this time with an army of your choosing.
+        </div>
+      </div>
+
+      <div className="relative rounded-2xl bg-black/25 border border-white/10 p-5">
+        <div className="text-sm uppercase tracking-wide text-neutral-400 mb-3">
+          Choose your army
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {ARMY_OPTIONS.filter((army) => {
+  if (army === "normal") return true;
+
+  if (army === "viking" && (campaign.completed || []).includes(4)) return true;
+  if (army === "mongolian" && (campaign.completed || []).includes(6)) return true;
+  if (army === "samurai" && (campaign.completed || []).includes(8)) return true;
+  if (army === "spartan" && (campaign.completed || []).includes(10)) return true;
+  if (army === "persian" && (campaign.completed || []).includes(12)) return true;
+  if (army === "roman" && (campaign.completed || []).includes(14)) return true;
+  if (army === "hannibal" && (campaign.completed || []).includes(16)) return true;
+
+  return false;
+}).map((army) => (
+            <button
+              key={`alexander-rematch-${army}`}
+              onClick={() => setAlexanderRematchArmy(army)}
+              className={variantButtonClass(army, alexanderRematchArmy === army)}
+            >
+              {variantLabelName(army)}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div className="mt-5 flex justify-between gap-3">
+      <button
+        onClick={leaveCampaignToMenu}
+        className="px-5 py-3 rounded-2xl bg-neutral-200 text-neutral-900 font-medium"
+      >
+        Back
+      </button>
+
+      <button
+        onClick={() => {
+          const rematchChapter = {
+            ...currentChapter,
+            whiteArmy: alexanderRematchArmy,
+          };
+          startCampaignBattle(rematchChapter);
+        }}
+        className="px-5 py-3 rounded-2xl bg-amber-300 text-neutral-950 font-bold shadow-lg"
+      >
+        Start Rematch
+      </button>
+    </div>
+  </>
+) : currentChapter.type === "story" ? (
           <>
             {renderStoryScene(currentScene)}
 
@@ -4963,7 +5486,11 @@ if (mode === "campaign" && campaign) {
                 >
                   Random
                 </button>
-                {ARMY_OPTIONS.map((army) => (
+                {ARMY_OPTIONS.filter((army) => {
+  if (!alexanderUnlocked && army === "alexander") return false;
+  if (!beninUnlocked && army === "benin") return false;
+  return true;
+}).map((army) => (
                   <button
                     key={`ww-w-${army}`}
                     onClick={() => setWorldWarSetup((prev) => ({ ...prev, whiteArmy: army }))}
@@ -4983,7 +5510,11 @@ if (mode === "campaign" && campaign) {
                 >
                   Random
                 </button>
-                {ARMY_OPTIONS.map((army) => (
+                {ARMY_OPTIONS.filter((army) => {
+  if (!alexanderUnlocked && army === "alexander") return false;
+  if (!beninUnlocked && army === "benin") return false;
+  return true;
+}).map((army) => (
                   <button
                     key={`ww-b-${army}`}
                     onClick={() => setWorldWarSetup((prev) => ({ ...prev, blackArmy: army }))}
@@ -5144,65 +5675,71 @@ if (mode === "campaign" && campaign) {
             </p>
           </div>
 
-          {import.meta.env.DEV && (
-            <div className="flex gap-2 shrink-0">
-              <button
-                onClick={() => triggerDevResult("win")}
-                className="px-4 py-2 bg-green-700 text-white rounded-xl"
-              >
-                Dev Win
-              </button>
+       <div className="flex gap-2 shrink-0">
+  {import.meta.env.DEV && (
+    <>
+      <button
+        onClick={() => triggerDevResult("win")}
+        className="px-4 py-2 bg-green-700 text-white rounded-xl"
+      >
+        Dev Win
+      </button>
 
-              <button
-                onClick={() => triggerDevResult("loss")}
-                className="px-4 py-2 bg-red-700 text-white rounded-xl"
-              >
-                Dev Loss
-              </button>
+      <button
+        onClick={() => triggerDevResult("loss")}
+        className="px-4 py-2 bg-red-700 text-white rounded-xl"
+      >
+        Dev Loss
+      </button>
 
-              <button
-                onClick={() => triggerDevResult("draw")}
-                className="px-4 py-2 bg-yellow-600 text-white rounded-xl"
-              >
-                Dev Draw
-              </button>
+      <button
+        onClick={() => triggerDevResult("draw")}
+        className="px-4 py-2 bg-yellow-600 text-white rounded-xl"
+      >
+        Dev Draw
+      </button>
+    </>
+  )}
 
-              <button
-                onClick={() => {
-                  cancelAiThinking();
-                  setPendingPromotion(null);
-                  resetGame();
-                }}
-                className="px-4 py-2 bg-neutral-200 rounded-xl"
-              >
-                New Game
-              </button>
+  <button
+    onClick={() => {
+      cancelAiThinking();
+      setPendingPromotion(null);
+      setRecordedGameResultKey(null);
+      resetGame();
+    }}
+    className="px-4 py-2 bg-neutral-200 rounded-xl"
+  >
+    New Game
+  </button>
 
-              <button
-                onClick={() => {
-                  cancelAiThinking();
-                  clearEngineCaches();
-                  setPendingPromotion(null);
-                  setMode(null);
-                  setPlayerColor(null);
-                  setVariant(null);
-                  setWorldWarSetup(null);
-                  setHannibalSetup(null);
-                  setHannibalSelectedSlot(null);
-                  setSelectedReserve(null);
-                  setLastMove(null);
-                  setKatanaEffect(null);
-                  setEndOverlay(null);
-                  setSkipOverlay(null);
-                  setResurrectionOverlay(null);
-                  setGame(createInitialState("normal"));
-                }}
-                className="px-4 py-2 bg-neutral-800 text-white rounded-xl"
-              >
-                Menu
-              </button>
-            </div>
-          )}
+  <button
+    onClick={() => {
+      cancelAiThinking();
+      clearEngineCaches();
+      setPendingPromotion(null);
+      setRecordedGameResultKey(null);
+      setMode(null);
+      setPlayerColor(null);
+      setVariant(null);
+      setWorldWarSetup(null);
+      setHannibalSetup(null);
+      setHannibalSelectedSlot(null);
+      setSelectedReserve(null);
+      setLastMove(null);
+      setKatanaEffect(null);
+      setEndOverlay(null);
+      setSkipOverlay(null);
+      setResurrectionOverlay(null);
+      setCampaign(null);
+      setCampaignBadEnding(false);
+      setGame(createInitialState("normal"));
+    }}
+    className="px-4 py-2 bg-neutral-800 text-white rounded-xl"
+  >
+    Menu
+  </button>
+</div>
         </div>
 
               <div className="grid gap-4 xl:grid-cols-[minmax(760px,820px)_320px] items-start">
@@ -5231,8 +5768,13 @@ if (mode === "campaign" && campaign) {
                         isLastMoveSquare(r, c)
                           ? "shadow-[inset_0_0_0_9999px_rgba(250,204,21,0.22)]"
                           : ""
+                         
                       }`}
                     >
+{isLockedBoardSquare(r, c) && (
+  <span className="absolute inset-0 pointer-events-none bg-emerald-900/30 ring-4 ring-emerald-400 ring-inset" />
+)}
+
                       {highlight && (
                         <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
                           <span
@@ -5335,6 +5877,57 @@ if (mode === "campaign" && campaign) {
                   </div>
                 </div>
               )}
+
+{currentTurnArmy === "benin" && (
+  <div className="mt-4 rounded-xl bg-neutral-100 p-3 text-sm">
+    <div className="flex items-center justify-between gap-3">
+      <div>
+        <div className="font-medium text-neutral-900">Benin action</div>
+        <div className="text-neutral-600">
+          Select a rook or queen, then click Fortify. A rook locks only its own square.
+          A queen locks its own square plus the square above, below, left, and right.
+        </div>
+      </div>
+      <button
+        onClick={() => {
+          if (!game.selected) return;
+
+          const [r, c] = game.selected;
+          const piece = game.board[r][c];
+          if (!piece || getColor(piece) !== game.turn) return;
+
+          const type = getType(piece);
+          if (type !== "r" && type !== "q") return;
+
+          const fortifiedState = applyBeninFortify(game, [r, c]);
+          if (fortifiedState !== game) {
+            finalizeTurn(
+              fortifiedState,
+              `${coordToAlg(r, c)} (fortify)`,
+              { from: [r, c], to: [r, c] },
+              null,
+              null,
+              null
+            );
+          }
+        }}
+        disabled={
+          currentTurnArmy !== "benin" ||
+          !game.selected ||
+          !game.board[game.selected[0]][game.selected[1]] ||
+          getColor(game.board[game.selected[0]][game.selected[1]]) !== game.turn ||
+          !["r", "q"].includes(getType(game.board[game.selected[0]][game.selected[1]])) ||
+          thinking ||
+          game.gameOver ||
+          (mode === "ai" && game.turn !== playerColor)
+        }
+        className="px-4 py-2 rounded-xl bg-neutral-900 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        Fortify Selected
+      </button>
+    </div>
+  </div>
+)}
 
               {hasRomanSide && (
                 <div className="mt-4 rounded-xl bg-neutral-100 p-3 text-sm text-neutral-700">
@@ -5623,7 +6216,7 @@ if (mode === "campaign" && campaign) {
       )}
 
       {endOverlay && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
           <div
             className={`absolute inset-0 ${
               endOverlay.kind === "victory" ? "bg-black/55" : "bg-neutral-900/45"
