@@ -3698,6 +3698,182 @@ async function chooseStrongComputerMoveAsync(state, isCancelled = () => false) {
   return bestMove;
 }
 
+function pickRandomWeighted(items) {
+  if (!items || items.length === 0) return null;
+
+  const total = items.reduce((sum, item) => sum + Math.max(1, item.weight || 1), 0);
+  let roll = Math.random() * total;
+
+  for (const item of items) {
+    roll -= Math.max(1, item.weight || 1);
+    if (roll <= 0) return item.value;
+  }
+
+  return items[items.length - 1].value;
+}
+
+function isDevelopmentMove(state, move) {
+  if (!move?.from || move.resurrect || move.sacrifice) return false;
+
+  const piece = state.board[move.from[0]][move.from[1]];
+  if (!piece) return false;
+
+  const type = getType(piece);
+  const color = getColor(piece);
+
+  if (!["n", "b", "p"].includes(type)) return false;
+
+  if (type === "n" || type === "b") {
+    if (color === "w") {
+      const startedOnHomeSquare =
+        (type === "n" && move.from[0] === 7 && (move.from[1] === 1 || move.from[1] === 6)) ||
+        (type === "b" && move.from[0] === 7 && (move.from[1] === 2 || move.from[1] === 5));
+      return startedOnHomeSquare;
+    } else {
+      const startedOnHomeSquare =
+        (type === "n" && move.from[0] === 0 && (move.from[1] === 1 || move.from[1] === 6)) ||
+        (type === "b" && move.from[0] === 0 && (move.from[1] === 2 || move.from[1] === 5));
+      return startedOnHomeSquare;
+    }
+  }
+
+  if (type === "p") {
+    const [tr, tc] = move.to;
+    return tc >= 2 && tc <= 5;
+  }
+
+  return false;
+}
+
+function getWeakMoveQuickScore(state, move) {
+  if (move.resurrect) return -40;
+  if (move.sacrifice) return -120;
+
+  let score = 0;
+
+  const movingPiece = move.from ? state.board[move.from[0]][move.from[1]] : null;
+  const movingType = movingPiece ? getType(movingPiece) : null;
+  const target = state.board[move.to[0]][move.to[1]];
+
+  if (target || move.enPassant) {
+    const victimValue = target ? (PIECE_VALUES[getType(target)] || 100) : 100;
+    const attackerValue = movingType ? (PIECE_VALUES[movingType] || 0) : 0;
+    score += 80 + victimValue - Math.floor(attackerValue * 0.15);
+  }
+
+  if (moveGivesCheck(state, move)) score += 50;
+  if (move.castle) score += 60;
+  if (isDevelopmentMove(state, move)) score += 28;
+
+  const [tr, tc] = move.to;
+  const distFromCenter = Math.abs(3.5 - tr) + Math.abs(3.5 - tc);
+  score += Math.round((7 - distFromCenter) * 4);
+
+  if (movingType === "q" && (state.moveHistory?.length || 0) < 10) {
+    score -= 35;
+  }
+
+  const unsafePlacementPenalty = getUnsafePlacementPenalty(state, move);
+  score -= Math.floor(unsafePlacementPenalty * 0.7);
+
+  const unsafeCapturePenalty = getUnsafeCapturePenalty(state, move);
+  score -= Math.floor(unsafeCapturePenalty * 0.7);
+
+  const samuraiSwing = samuraiCatastrophePenalty(state, move);
+  score += Math.floor((samuraiSwing.bonus || 0) * 0.35);
+  score -= Math.floor((samuraiSwing.penalty || 0) * 0.5);
+
+  return score;
+}
+
+async function chooseWeakComputerMoveAsync(state, isCancelled = () => false) {
+  let legalMoves = allLegalMoves(state);
+  if (legalMoves.length === 0) return null;
+  if (legalMoves.length === 1) return legalMoves[0];
+
+  const aiColor = state.turn;
+  const isOpening = (state.moveHistory?.length || 0) < 10;
+
+  // Weak AI should still take obvious wins.
+  for (const move of legalMoves) {
+    if (isCancelled()) return null;
+    if (isImmediateWinningMove(state, move)) return move;
+  }
+
+  // Remove catastrophic moves when possible.
+  let safeMoves = legalMoves.filter((move) => getImmediateLossPenalty(state, move) < 900000);
+  if (safeMoves.length === 0) safeMoves = legalMoves;
+
+  // Very shallow search only.
+  const settings = getAiSettings("weak", isEndgame(state));
+  const ordered = orderMoves(state, safeMoves).slice(0, Math.min(settings.maxRoot, safeMoves.length));
+
+  const scored = [];
+
+  for (let i = 0; i < ordered.length; i++) {
+    if (isCancelled()) return null;
+
+    const move = ordered[i];
+    const result = applyMoveToState(state, move, "q");
+    const nextState = buildChildState(state, result);
+
+    let score;
+
+    if (settings.depth <= 1) {
+      score = evaluateBoard(nextState);
+    } else {
+      score = minimax(
+        nextState,
+        settings.depth - 1,
+        -Infinity,
+        Infinity,
+        aiColor === "b",
+        null
+      );
+    }
+
+    // Add noisy, human-like shallow preferences.
+    score += aiColor === "w" ? getWeakMoveQuickScore(state, move) : -getWeakMoveQuickScore(state, move);
+
+    // Strongly discourage instant blunders, but not perfectly.
+    const immediateLossPenalty = getImmediateLossPenalty(state, move);
+    if (immediateLossPenalty > 0) {
+      score += aiColor === "w"
+        ? -Math.floor(immediateLossPenalty * 0.45)
+        : Math.floor(immediateLossPenalty * 0.45);
+    }
+
+    const repetitionPenalty = getRepetitionPenalty(state, move);
+    if (repetitionPenalty > 0) {
+      score += aiColor === "w"
+        ? -Math.floor(repetitionPenalty * 0.6)
+        : Math.floor(repetitionPenalty * 0.6);
+    }
+
+    scored.push({ move, score });
+
+    if ((i & 1) === 1) {
+      await yieldToUi();
+    }
+  }
+
+  scored.sort((a, b) => (aiColor === "w" ? b.score - a.score : a.score - b.score));
+
+  // Weak AI does not always pick the best move.
+  // In the opening it plays more "reasonable"; later it gets sloppier.
+  const candidateCount = isOpening ? Math.min(4, scored.length) : Math.min(5, scored.length);
+  const candidates = scored.slice(0, candidateCount);
+
+  const weighted = candidates.map((entry, index) => ({
+    value: entry.move,
+    weight: isOpening
+      ? [48, 28, 16, 8, 4][index] || 2
+      : [38, 26, 18, 12, 8][index] || 2,
+  }));
+
+  return pickRandomWeighted(weighted) || scored[0].move;
+}
+
 function moveNeedsPromotion(state, move) {
   if (!move || move.resurrect || move.sacrifice || !move.from) return false;
   const piece = state.board[move.from[0]][move.from[1]];
@@ -4817,10 +4993,18 @@ function isLockedBoardSquare(r, c) {
     let cancelled = false;
 
     setThinking(true);
-    setThinkingLabel(`${AI_NAME} is thinking...`);
+    setThinkingLabel(
+  `${aiDifficulty === "weak" ? "Weak AI" : AI_NAME} is thinking...`
+);
 
     aiTimerRef.current = setTimeout(async () => {
-      const move = await chooseStrongComputerMoveAsync(
+      const move =
+  aiDifficulty === "weak"
+    ? await chooseWeakComputerMoveAsync(
+        game,
+        () => cancelled || token !== aiSearchTokenRef.current
+      )
+    : await chooseStrongComputerMoveAsync(
         game,
         () => cancelled || token !== aiSearchTokenRef.current
       );
@@ -4848,7 +5032,7 @@ function isLockedBoardSquare(r, c) {
         aiTimerRef.current = null;
       }
     };
-  }, [game, mode, playerColor, hannibalSetup, worldWarSetup, pendingPromotion]);
+  }, [game, mode, playerColor, aiDifficulty, hannibalSetup, worldWarSetup, pendingPromotion]);
 
 function applyOfficialResult(resultType, colorForStats = playerColor) {
   if (!colorForStats) return;
@@ -5669,10 +5853,14 @@ function goToNextCampaignChapter() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-neutral-100 p-4">
         <div className="bg-white p-10 rounded-3xl shadow-xl text-center max-w-2xl w-full">
-          <h1 className="text-3xl font-bold mb-3">Play vs {AI_NAME}</h1>
-          <p className="text-neutral-600 mb-8">
-            One stronger adaptive AI mode tuned for deeper search, better mate finishing, and stronger tactical threat recognition across variants.
-          </p>
+         <h1 className="text-3xl font-bold mb-3">
+  Play vs {aiDifficulty === "weak" ? "Weak AI" : AI_NAME}
+</h1>
+<p className="text-neutral-600 mb-8">
+  {aiDifficulty === "weak"
+    ? "A softer AI that plays more human-like and makes real mistakes, while still seeing obvious wins."
+    : "A stronger adaptive AI mode tuned for deeper search, better mate finishing, and stronger tactical threat recognition across variants."}
+</p>
 
           <h2 className="text-2xl font-bold mb-4">Choose Your Color</h2>
           <div className="flex gap-6 justify-center">
@@ -5710,7 +5898,7 @@ function goToNextCampaignChapter() {
             <h1 className="text-3xl font-bold">Playable Chess</h1>
             <p className="text-sm text-neutral-600">
               {mode === "ai"
-                ? `Mode: vs Computer • ${AI_NAME} • Variant: ${
+                ? `Mode: vs Computer • ${aiDifficulty === "weak" ? "Weak AI" : AI_NAME} • Variant: ${
                     variant === "worldwar"
                       ? `World War (${variantLabel(game.whiteArmy)} vs ${variantLabel(game.blackArmy)})`
                       : variantLabelName(variant)
