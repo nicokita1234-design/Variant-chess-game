@@ -23,6 +23,20 @@ import persiaMap from "./assets/maps/persia.png";
 import romeMap from "./assets/maps/rome.png";
 import carthageMap from "./assets/maps/carthage.png";
 
+import wpImg from "./assets/pieces/wp.png";
+import wrImg from "./assets/pieces/wr.png";
+import wnImg from "./assets/pieces/wn.png";
+import wbImg from "./assets/pieces/wb.png";
+import wqImg from "./assets/pieces/wq.png";
+import wkImg from "./assets/pieces/wk.png";
+
+import bpImg from "./assets/pieces/bp.png";
+import brImg from "./assets/pieces/br.png";
+import bnImg from "./assets/pieces/bn.png";
+import bbImg from "./assets/pieces/bb.png";
+import bqImg from "./assets/pieces/bq.png";
+import bkImg from "./assets/pieces/bk.png";
+
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const PIECES = {
   wp: "♙",
@@ -38,6 +52,34 @@ const PIECES = {
   bq: "♛",
   bk: "♚",
 };
+
+const PIECE_IMAGES = {
+  wp: wpImg,
+  wr: wrImg,
+  wn: wnImg,
+  wb: wbImg,
+  wq: wqImg,
+  wk: wkImg,
+  bp: bpImg,
+  br: brImg,
+  bn: bnImg,
+  bb: bbImg,
+  bq: bqImg,
+  bk: bkImg,
+};
+
+function renderPiece(piece, className = "") {
+  if (!piece) return null;
+
+  return (
+    <img
+      src={PIECE_IMAGES[piece]}
+      alt={piece}
+      draggable={false}
+      className={`select-none pointer-events-none object-contain ${className}`}
+    />
+  );
+}
 
 const AI_NAME = "Strong AI";
 const ANALYSIS_ROOT_MOVES = 3;
@@ -5815,9 +5857,7 @@ function goToNextCampaignChapter() {
                   onClick={() => handleHannibalSlotClick(actualIndex)}
                   className={`aspect-square rounded-2xl border text-5xl flex items-center justify-center transition-all ${isDarkSquare ? "bg-amber-800/85 text-white border-amber-950" : "bg-amber-100 text-neutral-900 border-amber-300"} ${hannibalSelectedSlot === actualIndex ? "ring-4 ring-sky-400 scale-105" : ""}`}
                 >
-                  <span className={pieceClass(piece)} style={pieceFontStyle()}>
-  {PIECES[piece]}
-</span>
+                 {renderPiece(piece, "w-12 h-12")}
                 </button>
               );
             })}
@@ -6047,14 +6087,13 @@ function goToNextCampaignChapter() {
                         </>
                       )}
 
-                      <span
-                        className={`relative z-10 transition-transform duration-200 ${
-                          isLastMoveToSquare(r, c) ? "scale-110" : "scale-100"
-                        } ${pieceClass(piece)}`}
-                        style={pieceFontStyle()}
-                      >
-                        {piece ? PIECES[piece] : ""}
-                      </span>
+                     <span
+  className={`relative z-10 transition-transform duration-200 flex items-center justify-center ${
+    isLastMoveToSquare(r, c) ? "scale-110" : "scale-100"
+  }`}
+>
+  {piece ? renderPiece(piece, "w-[72%] h-[72%]") : null}
+</span>
                     </button>
                   );
                 })}
@@ -6209,7 +6248,7 @@ function goToNextCampaignChapter() {
                           onClick={() => handleReserveClick(piece, index)}
                           className={`h-10 w-10 rounded-xl border text-2xl ${selectedReserve && selectedReserve.piece === piece && selectedReserve.reserveIndex === index ? "bg-amber-100 border-amber-400" : "bg-white border-neutral-300"}`}
                         >
-                          <span className={pieceClass(piece)}>{PIECES[piece]}</span>
+                          {renderPiece(piece, "w-7 h-7")}
                         </button>
                       ))}
                     </div>
@@ -6223,7 +6262,7 @@ function goToNextCampaignChapter() {
                           onClick={() => handleReserveClick(piece, index)}
                           className={`h-10 w-10 rounded-xl border text-2xl ${selectedReserve && selectedReserve.piece === piece && selectedReserve.reserveIndex === index ? "bg-amber-100 border-amber-400" : "bg-white border-neutral-300"}`}
                         >
-                          <span className={pieceClass(piece)}>{PIECES[piece]}</span>
+                          {renderPiece(piece, "w-7 h-7")}
                         </button>
                       ))}
                     </div>
@@ -6301,9 +6340,7 @@ function goToNextCampaignChapter() {
                       <div className="mt-2 flex flex-wrap gap-2 min-h-10">
                         {missing.w.length === 0 ? <span className="text-neutral-500">None</span> : missing.w.map((piece, index) => (
                           <span key={`lost-w-${piece}-${index}`} className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-300 bg-white text-2xl">
-                            <span className={pieceClass(piece)} style={pieceFontStyle()}>
-  {PIECES[piece]}
-</span>
+                            {renderPiece(piece, "w-7 h-7")}
                           </span>
                         ))}
                       </div>
@@ -6313,9 +6350,7 @@ function goToNextCampaignChapter() {
                       <div className="mt-2 flex flex-wrap gap-2 min-h-10">
                         {missing.b.length === 0 ? <span className="text-neutral-500">None</span> : missing.b.map((piece, index) => (
                           <span key={`lost-b-${piece}-${index}`} className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-300 bg-white text-2xl">
-                            <span className={pieceClass(piece)} style={pieceFontStyle()}>
-  {PIECES[piece]}
-</span>
+                            {renderPiece(piece, "w-7 h-7")}
                           </span>
                         ))}
                       </div>
@@ -6402,7 +6437,7 @@ function goToNextCampaignChapter() {
           <div className="relative overflow-hidden rounded-3xl border-4 border-white bg-gradient-to-br from-violet-700/95 via-purple-700/95 to-fuchsia-700/95 px-10 py-7 text-center shadow-2xl backdrop-blur-sm">
             <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_center,white_0%,transparent_60%)]" />
             <div className="relative mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-full border-4 border-white/80 bg-white/12 text-6xl shadow-lg">
-              <span className={pieceClass(resurrectionOverlay.piece)}>{PIECES[resurrectionOverlay.piece]}</span>
+              {renderPiece(resurrectionOverlay.piece, "w-14 h-14")}
             </div>
             <div className="relative text-[clamp(2rem,6vw,4.2rem)] font-black uppercase tracking-[0.14em] text-gray-100 [text-shadow:0_2px_0_rgba(0,0,0,0.35)] animate-pulse">
               Resurrection
@@ -6449,9 +6484,7 @@ function goToNextCampaignChapter() {
                     }}
                     className="rounded-2xl border border-neutral-300 bg-neutral-50 hover:bg-neutral-100 p-4 text-5xl flex items-center justify-center"
                   >
-                    <span className={pieceClass(piece)} style={pieceFontStyle()}>
-                      {PIECES[piece]}
-                    </span>
+                    {renderPiece(piece, "w-12 h-12")}
                   </button>
                 );
               })}
