@@ -139,12 +139,12 @@ If either King is captured the game is lost.
 One Roman King may castle with a rook.`,
   },
   alexander: {
-    title: "Alexander Chess",
-    text: `Alexander uses a unique elite formation.
+  title: "Alexander Chess",
+  text: `Alexander uses a unique elite formation.
 There is no Queen.
-The King moves like a Queen while remaining the royal piece.
+The King moves like a King and a Knight while remaining the royal piece.
 If the Alexander King is captured or checkmated, that side loses.`,
-  },
+},
   benin: {
   title: "Benin Chess",
   text: `Standard chess setup.
@@ -4456,11 +4456,15 @@ function startCampaignBattle(chapter) {
     }, 1450);
   }
 
-  function finalizeTurn(nextGameBase, notation = null, move = null, insight = null, massDelete = null, specialOutcome = null) {
+    function finalizeTurn(nextGameBase, notation = null, move = null, insight = null, massDelete = null, specialOutcome = null) {
     const activeVariant = nextGameBase.variant || variant;
     const inCheck = isInCheck(nextGameBase.board, nextGameBase.turn, activeVariant, nextGameBase);
     const legal = allLegalMoves(nextGameBase);
     const insufficientMaterial = activeVariant === "roman" ? false : hasInsufficientMaterial(nextGameBase.board);
+
+    const nextHash = hashState(nextGameBase);
+    const nextPositionCount = ((game.positionCounts || {})[nextHash] || 0) + 1;
+    const repetitionDraw = nextPositionCount >= 3;
 
     let status = `${nextGameBase.turn === "w" ? "White" : "Black"} to move`;
     const skippedTurnsNow = nextGameBase.skippedTurns || [];
@@ -4481,22 +4485,23 @@ function startCampaignBattle(chapter) {
     } else if (specialOutcome?.type === "mongolian-knights-lost") {
       gameOver = true;
       status = `${specialOutcome.loser === "w" ? "White" : "Black"} lost all knights and loses.`;
-    } else if (legal.length === 0) {
+        } else if (legal.length === 0) {
       gameOver = true;
       if (inCheck) {
         status = `${nextGameBase.turn === "w" ? "White" : "Black"} is checkmated. ${nextGameBase.turn === "w" ? "Black" : "White"} wins.`;
       } else {
         status = "Stalemate.";
       }
+    } else if (repetitionDraw) {
+      gameOver = true;
+      status = "Draw by repetition.";
     } else if (insufficientMaterial) {
       gameOver = true;
       status = "Draw by insufficient material.";
     } else if (inCheck) {
       status = `${nextGameBase.turn === "w" ? "White" : "Black"} to move — check.`;
     }
-
 setGame((prev) => {
-  const nextHash = hashState(nextGameBase);
 
   return {
     ...nextGameBase,
