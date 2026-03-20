@@ -951,14 +951,13 @@ function isFortifiedSquare(state, r, c) {
 function pieceClass(piece) {
   if (!piece) return "";
   return getColor(piece) === "w"
-    ? "select-none !text-white [text-shadow:0_0_1px_#111,0_1px_0_#111,1px_0_0_#111,-1px_0_0_#111,0_-1px_0_#111]"
-    : "select-none !text-neutral-900";
+    ? "!text-white [text-shadow:0_0_1px_#111,0_1px_0_#111,1px_0_0_#111,-1px_0_0_#111,0_-1px_0_#111]"
+    : "!text-neutral-900";
 }
 
 function pieceFontStyle() {
   return {
-    fontFamily: '"Segoe UI Symbol", "Noto Sans Symbols 2", "Noto Sans Symbols", "DejaVu Sans", "Arial Unicode MS", serif',
-    fontVariantEmoji: "text",
+    fontFamily: '"Segoe UI Symbol", "Noto Sans Symbols 2", "Noto Sans Symbols", "DejaVu Sans", serif',
   };
 }
 
@@ -5810,9 +5809,7 @@ function goToNextCampaignChapter() {
                   onClick={() => handleHannibalSlotClick(actualIndex)}
                   className={`aspect-square rounded-2xl border text-5xl flex items-center justify-center transition-all ${isDarkSquare ? "bg-amber-800/85 text-white border-amber-950" : "bg-amber-100 text-neutral-900 border-amber-300"} ${hannibalSelectedSlot === actualIndex ? "ring-4 ring-sky-400 scale-105" : ""}`}
                 >
-                  <span className={pieceClass(piece)} style={pieceFontStyle()}>
-  {PIECES[piece]}
-</span>
+                  <span className={pieceClass(piece)}>{PIECES[piece]}</span>
                 </button>
               );
             })}
@@ -6296,9 +6293,7 @@ function goToNextCampaignChapter() {
                       <div className="mt-2 flex flex-wrap gap-2 min-h-10">
                         {missing.w.length === 0 ? <span className="text-neutral-500">None</span> : missing.w.map((piece, index) => (
                           <span key={`lost-w-${piece}-${index}`} className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-300 bg-white text-2xl">
-                            <span className={pieceClass(piece)} style={pieceFontStyle()}>
-  {PIECES[piece]}
-</span>
+                            <span className={pieceClass(piece)}>{PIECES[piece]}</span>
                           </span>
                         ))}
                       </div>
@@ -6308,9 +6303,7 @@ function goToNextCampaignChapter() {
                       <div className="mt-2 flex flex-wrap gap-2 min-h-10">
                         {missing.b.length === 0 ? <span className="text-neutral-500">None</span> : missing.b.map((piece, index) => (
                           <span key={`lost-b-${piece}-${index}`} className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-neutral-300 bg-white text-2xl">
-                            <span className={pieceClass(piece)} style={pieceFontStyle()}>
-  {PIECES[piece]}
-</span>
+                            <span className={pieceClass(piece)}>{PIECES[piece]}</span>
                           </span>
                         ))}
                       </div>
@@ -6444,9 +6437,7 @@ function goToNextCampaignChapter() {
                     }}
                     className="rounded-2xl border border-neutral-300 bg-neutral-50 hover:bg-neutral-100 p-4 text-5xl flex items-center justify-center"
                   >
-                    <span className={pieceClass(piece)} style={pieceFontStyle()}>
-                      {PIECES[piece]}
-                    </span>
+                    <span className={pieceClass(piece)}>{PIECES[piece]}</span>
                   </button>
                 );
               })}
